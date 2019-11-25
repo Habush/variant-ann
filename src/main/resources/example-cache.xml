@@ -31,24 +31,14 @@
     When starting Ignite from Java IDE, pass path to this file to Ignition:
     Ignition.start("examples/config/example-cache.xml");
 -->
+<!--suppress SpringFacetInspection -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="
         http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="ignite.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
-        <property name="cacheConfiguration">
-            <list>
-                <!-- Partitioned cache example configuration (Atomic mode). -->
-                <bean class="org.apache.ignite.configuration.CacheConfiguration">
-                    <property name="name" value="default"/>
-                    <property name="atomicityMode" value="ATOMIC"/>
-                    <property name="backups" value="1"/>
-                </bean>
-            </list>
-        </property>
-
-        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="peerClassLoadingEnabled" value="true"/>
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
                 <property name="ipFinder">
@@ -59,15 +49,18 @@
                     -->
                     <!-- Uncomment static IP finder to enable static-based discovery of initial nodes. -->
                     <!--<bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">-->
-                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder">
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
                         <property name="addresses">
                             <list>
                                 <!-- In distributed environment, replace with actual host IP address. -->
-                                <value>127.0.0.1:47500..47509</value>
+                                <value>46.4.115.181</value>
+                                <value>88.198.22.185</value>
                             </list>
                         </property>
                     </bean>
                 </property>
+                <property name="networkTimeout" value="10000"/>
+<!--                <property name="joinTimeout" value="1000"/>-->
             </bean>
         </property>
     </bean>
