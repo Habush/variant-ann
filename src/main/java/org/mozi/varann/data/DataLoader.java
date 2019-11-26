@@ -42,8 +42,9 @@ public class DataLoader {
 
         private void load1kGenomicDb() {
             File[] vcfiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".vcf.gz"));
-            assert vcfiles != null;
-            VCFFileReader vcfReader = DataReader.readVCF(vcfiles[0].getPath());
+            File[] indexFiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".tbi"));
+            assert vcfiles != null && indexFiles != null;
+            VCFFileReader vcfReader = new VCFFileReader(new File(vcfiles[0].getPath()), new File(indexFiles[0].getPath()), true);
             genomeRepo.save("1k", vcfReader);
         }
 
