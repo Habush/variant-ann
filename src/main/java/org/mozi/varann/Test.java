@@ -85,7 +85,7 @@ public class Test {
     private static void annotateVCF() {
         try {
             logger.info("Starting annotation...");
-            VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "small.vcf"));
+            VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "example.vcf"), false);
             VCFHeader vcfHeader = vcfReader.getFileHeader();
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
