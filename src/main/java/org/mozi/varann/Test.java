@@ -84,9 +84,8 @@ public class Test {
     }
 
     private static void annotateVCF() {
-        try {
+        try(VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "example.vcf"), false)) {
             logger.info("Starting annotation...");
-            VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "example.vcf"), false);
             VCFHeader vcfHeader = vcfReader.getFileHeader();
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
@@ -94,7 +93,7 @@ public class Test {
             DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(genomeRepo.findById("1k").get(), refRepo.findById("hg38").get(), options), options);
             thousandGenomeAnno.extendHeader(vcfHeader);
             stream = stream.map(thousandGenomeAnno::annotateVariantContext);
-            JannovarData data = new JannovarDataSerializer(PathUtil.join(properties.getProperty("basePath"), "hg38_ensembl.ser")).load();
+            JannovarData data = transcriptRepo.findById("hg38_ensembl").orElse(null);
             assert data != null;
             logger.info("Sanity check. There are " + data.getChromosomes().size() + " chromosomes");
             VariantEffectHeaderExtender effectHeader = new VariantEffectHeaderExtender();
@@ -105,12 +104,12 @@ public class Test {
             try(VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(vcfHeader, PathUtil.join(properties.getProperty("basePath"), "output.vcf"));
                 VariantContextProcessor processor = new ConsumerProcessor(vc -> writer.add(vc))
             ){
-                stream.forEachOrdered(processor::put);
+               stream.forEachOrdered(processor::put);
             }
             logger.info("Wrote annotation result to output.vcf");
             logger.info("Finished Annotation");
         }
-        catch (JannovarVarDBException | SerializationException ex) {
+        catch (JannovarVarDBException ex) {
             ex.printStackTrace();
         }
     }
