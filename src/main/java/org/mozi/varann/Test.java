@@ -4,10 +4,17 @@ package org.mozi.varann;
 import de.charite.compbio.jannovar.data.JannovarData;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.htsjdk.VariantContextAnnotator;
+import de.charite.compbio.jannovar.htsjdk.VariantContextWriterConstructionHelper;
+import de.charite.compbio.jannovar.htsjdk.VariantEffectHeaderExtender;
+import de.charite.compbio.jannovar.impl.util.PathUtil;
+import de.charite.compbio.jannovar.mendel.filter.ConsumerProcessor;
+import de.charite.compbio.jannovar.mendel.filter.VariantContextProcessor;
 import de.charite.compbio.jannovar.vardbs.base.DBAnnotationOptions;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
+import de.charite.compbio.jannovar.vardbs.facade.DBVariantContextAnnotator;
 import de.charite.compbio.jannovar.vardbs.g1k.ThousandGenomesAnnotationDriver;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
@@ -68,8 +75,6 @@ public class Test {
     private static void populateRepository() {
 
         try {
-            logger.info("Loading reference genome");
-
             dataLoader.init();
             logger.info("\n Saved data");
         } catch (SerializationException | JannovarVarDBException ex) {
@@ -79,19 +84,29 @@ public class Test {
 
     private static void annotateVCF() {
         try {
+            logger.info("Starting annotation...");
             VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "small.vcf"));
             VCFHeader vcfHeader = vcfReader.getFileHeader();
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
             options.setIdentifierPrefix("1K_");
-            ThousandGenomesAnnotationDriver thousandGenomeAnno = new ThousandGenomesAnnotationDriver(genomeRepo.findById("1k").get(), refRepo.findById("hg38").get(), options);
+            DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(genomeRepo.findById("1k").get(), refRepo.findById("hg38").get(), options), options);
+            thousandGenomeAnno.extendHeader(vcfHeader);
             stream = stream.map(thousandGenomeAnno::annotateVariantContext);
             JannovarData data = transcriptRepo.findById("hg38_ensembl").get();
+            assert data != null;
+            logger.info("Sanity check. There are " + data.getChromosomes().size() + " chromosomes");
+            VariantEffectHeaderExtender effectHeader = new VariantEffectHeaderExtender();
+            effectHeader.addHeaders(vcfHeader);
             VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
             stream = stream.map(annotator::annotateVariantContext);
-            stream.forEach(vc -> {
-                logger.info("VC: " + vc.toString());
-            });
+
+            try(VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(vcfHeader, PathUtil.join(properties.getProperty("basePath"), "output.vcf"));
+                VariantContextProcessor processor = new ConsumerProcessor(vc -> writer.add(vc))
+            ){
+                stream.forEachOrdered(processor::put);
+            }
+            logger.info("Wrote annotation result to output.vcf");
             logger.info("Finished Annotation");
         }
         catch (JannovarVarDBException ex) {
