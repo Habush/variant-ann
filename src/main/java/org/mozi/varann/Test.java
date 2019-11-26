@@ -15,9 +15,13 @@ import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
 import de.charite.compbio.jannovar.vardbs.facade.DBVariantContextAnnotator;
 import de.charite.compbio.jannovar.vardbs.g1k.ThousandGenomesAnnotationDriver;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import org.apache.commons.io.FileUtils;
 import org.mozi.varann.data.DataLoader;
 import org.mozi.varann.data.GenomeDbRepository;
@@ -28,8 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -83,6 +89,27 @@ public class Test {
         }
     }
 
+    private static VariantContextWriter buildVariantContextWrite(VCFHeader header, String filename) {
+        VariantContextWriterBuilder builder = new VariantContextWriterBuilder();
+        builder.setOutputFile(new File(filename));
+        builder.setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
+        builder.setOutputFileType(VariantContextWriterBuilder.OutputType.VCF);
+
+        if (header.getSequenceDictionary() == null) {
+            builder.unsetOption(Options.INDEX_ON_THE_FLY);
+        }else {
+            builder.unsetOption(Options.INDEX_ON_THE_FLY);
+        }
+
+        VariantContextWriter out = builder.build();
+        VCFHeader updatedHeader = VariantContextWriterConstructionHelper.extendHeaderFields(new VCFHeader(header));
+
+        out.writeHeader(updatedHeader);
+
+        return out;
+    }
+
+
     private static void annotateVCF() {
         try(VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "example.vcf"), false)) {
             logger.info("Starting annotation...");
@@ -101,7 +128,7 @@ public class Test {
             VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
             stream = stream.map(annotator::annotateVariantContext);
 
-            try(VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(vcfHeader, PathUtil.join(properties.getProperty("basePath"), "output.vcf"));
+            try(VariantContextWriter writer = buildVariantContextWrite(vcfHeader, PathUtil.join(properties.getProperty("basePath"), "output.vcf"));
                 VariantContextProcessor processor = new ConsumerProcessor(vc -> writer.add(vc))
             ){
                stream.forEachOrdered(processor::put);
