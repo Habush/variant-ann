@@ -22,6 +22,7 @@
         <jannovar.version>0.36-SNAPSHOT</jannovar.version>
         <junit.version>4.12</junit.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <mainClass>org.mozi.varann.Test</mainClass>
     </properties>
 
     <developers>
@@ -122,9 +123,12 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <!--Use filtering so that maven will replace placeholders with values
-                    from the pom e.g. ${project.version} -->
-                <filtering>true</filtering>
+                <includes>
+                    <include>application.properties</include>
+                    <include>small.vcf</include>
+                    <include>example-cache.xml</include>
+                    <include>default_sources.ini</include>
+                </includes>
             </resource>
         </resources>
         <plugins>
@@ -142,21 +146,37 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.jolira</groupId>
-                <artifactId>onejar-maven-plugin</artifactId>
-                <version>1.4.4</version>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>
+                                ${mainClass}
+                            </mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
-                        <id>build-query</id>
-                        <configuration>
-                            <mainClass>org.mozi.varann.Test</mainClass>
-                            <attachToBuild>true</attachToBuild>
-                            <classifier>onejar</classifier>
-                            <filename>variant-ann.jar</filename>
-                        </configuration>
+                        <phase>package</phase>
                         <goals>
-                            <goal>one-jar</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${mainClass}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -178,12 +198,6 @@
                                     <!--Use filtering so that maven will replace placeholders with values
                                         from the pom e.g. ${project.version} -->
                                     <filtering>true</filtering>
-                                    <includes>
-                                        <include>application.properties</include>
-                                        <include>example.settings</include>
-                                        <include>test.settings</include>
-                                        <include>log4j2.xml</include>
-                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -206,7 +220,7 @@
                 </executions>
                 <configuration>
                     <serverId>nexus</serverId>
-                    <nexusUrl>http://localhost:8081/nexus/</nexusUrl>
+                    <nexusUrl>http://88.198.22.185:8081/nexus/</nexusUrl>
                     <skipStaging>true</skipStaging>
                 </configuration>
             </plugin>

@@ -10,6 +10,7 @@ import de.charite.compbio.jannovar.vardbs.g1k.ThousandGenomesAnnotationDriver;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.io.FileUtils;
 import org.mozi.varann.data.DataLoader;
 import org.mozi.varann.data.GenomeDbRepository;
 import org.mozi.varann.data.ReferenceRepository;
@@ -19,11 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -34,11 +32,12 @@ public class Test {
     private static TranscriptDbRepository transcriptRepo;
     private static GenomeDbRepository genomeRepo;
     private static DataLoader dataLoader;
+    private static Properties properties;
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
 
-    public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
-        Properties properties  = new Properties();
-        try(InputStream in = new FileInputStream("application.properties")) {
+    public static void main(String[] args) {
+        properties  = new Properties();
+        try(InputStream in = Test.class.getResourceAsStream("/application.properties")) {
             properties.load(in);
             igniteSpringDataInit();
             dataLoader = new DataLoader(properties.getProperty("basePath"));
@@ -81,7 +80,7 @@ public class Test {
 
     private static void annotateVCF() {
         try {
-            VCFFileReader vcfReader = new VCFFileReader(new File("small.vcf"));
+            VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "small.vcf"));
             VCFHeader vcfHeader = vcfReader.getFileHeader();
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
