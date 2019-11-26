@@ -53,7 +53,8 @@ public class DataLoader {
             assert transFiles != null;
             assert transFiles.length > 0;
             for(File file : transFiles) {
-                String name = file.getName().split(".")[0];
+                logger.info("Loading transcript file " + file.getName());
+                String name = file.getName().split("\\.")[0];
                 transcriptRepo.save(name,  DataReader.readSerializedObj(file.getPath()));
             }
         }
@@ -63,12 +64,13 @@ public class DataLoader {
 
             assert fastFiles != null;
             for(File file : fastFiles) {
+                logger.info("Loading fasta file " + file.getName());
                 String name = null;
-                if (file.getPath().matches("(.*)(h38)(.*)*")){
+                if (file.getName().matches("(.*)(h38)(.*)*")){
                     name = "hg38";
-                } else if(file.getPath().matches("(.*)(h19)(.*)*")) {
+                } else if(file.getName().matches("(.*)(h19)(.*)*")) {
                     name = "hg19";
-                } else if(file.getPath().matches("(.*)(h37)(.*)*")) {
+                } else if(file.getName().matches("(.*)(h37)(.*)*")) {
                     name = "hg37";
                 }
                 assert name != null;
