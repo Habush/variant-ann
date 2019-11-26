@@ -2,6 +2,7 @@ package org.mozi.varann;
 
 
 import de.charite.compbio.jannovar.data.JannovarData;
+import de.charite.compbio.jannovar.data.JannovarDataSerializer;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.htsjdk.VariantContextAnnotator;
 import de.charite.compbio.jannovar.htsjdk.VariantContextWriterConstructionHelper;
@@ -93,7 +94,7 @@ public class Test {
             DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(genomeRepo.findById("1k").get(), refRepo.findById("hg38").get(), options), options);
             thousandGenomeAnno.extendHeader(vcfHeader);
             stream = stream.map(thousandGenomeAnno::annotateVariantContext);
-            JannovarData data = transcriptRepo.findById("hg38_ensembl").get();
+            JannovarData data = new JannovarDataSerializer(PathUtil.join(properties.getProperty("basePath"), "hg38_ensembl.ser")).load();
             assert data != null;
             logger.info("Sanity check. There are " + data.getChromosomes().size() + " chromosomes");
             VariantEffectHeaderExtender effectHeader = new VariantEffectHeaderExtender();
@@ -109,7 +110,7 @@ public class Test {
             logger.info("Wrote annotation result to output.vcf");
             logger.info("Finished Annotation");
         }
-        catch (JannovarVarDBException ex) {
+        catch (JannovarVarDBException | SerializationException ex) {
             ex.printStackTrace();
         }
     }

@@ -32,8 +32,8 @@ public class DataLoader {
         }
 
         public void init() throws JannovarVarDBException, SerializationException {
-            logger.info("Loading Transcripts");
-            loadTranscripts();;
+//            logger.info("Loading Transcripts");
+//            loadTranscripts();;
             logger.info("Loading Reference DBs");
             loadReferences();
             logger.info("Loading 1000 Genome data");
