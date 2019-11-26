@@ -15,20 +15,19 @@ import java.io.File;
  * author: Abdulrahman Semrie
  *
  */
-@Component
 public class DataLoader {
-        @Autowired
         private TranscriptDbRepository transcriptRepo;
-        @Autowired
         private GenomeDbRepository genomeRepo;
-        @Autowired
         private ReferenceRepository refRepo;
 
         private File basePath;
 
         private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
 
-        public DataLoader(String path) {
+        public DataLoader(String path, TranscriptDbRepository transRepo, GenomeDbRepository gRepo, ReferenceRepository refRepo) {
+            this.transcriptRepo = transRepo;
+            this.genomeRepo = gRepo;
+            this.refRepo = refRepo;
             this.basePath = new File(path);
         }
 

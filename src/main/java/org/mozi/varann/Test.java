@@ -40,8 +40,7 @@ public class Test {
         try(InputStream in = Test.class.getResourceAsStream("/application.properties")) {
             properties.load(in);
             igniteSpringDataInit();
-            dataLoader = new DataLoader(properties.getProperty("basePath"));
-            igniteSpringDataInit();
+            dataLoader = new DataLoader(properties.getProperty("basePath"), transcriptRepo, genomeRepo, refRepo);
             populateRepository();
             annotateVCF();
             ctx.destroy();
