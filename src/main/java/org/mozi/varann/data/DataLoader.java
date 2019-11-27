@@ -45,7 +45,7 @@ public class DataLoader {
             File[] indexFiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".tbi"));
             assert vcfiles != null && indexFiles != null;
             VCFFileReader vcfReader = new VCFFileReader(new File(vcfiles[0].getPath()), new File(indexFiles[0].getPath()), true);
-            genomeRepo.save("1k", vcfReader);
+            genomeRepo.save("1k", vcfReader.iterator().toList());
         }
 
         private void loadTranscripts() throws SerializationException {
