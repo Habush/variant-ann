@@ -38,8 +38,8 @@ public class DataLoader {
             loadTranscripts();;
             logger.info("Loading Reference DBs");
             loadReferences();
-            logger.info("Loading 1000 Genome data");
-            load1kGenomicDb();
+//            logger.info("Loading 1000 Genome data");
+//            load1kGenomicDb();
         }
 
         private void load1kGenomicDb() {
@@ -47,9 +47,6 @@ public class DataLoader {
             File[] indexFiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".tbi"));
             assert vcfiles != null && indexFiles != null;
             VCFFileReader vcfReader = new VCFFileReader(new File(vcfiles[0].getPath()), new File(indexFiles[0].getPath()), true);
-            List<VariantContext> vcs = vcfReader.iterator().toList();
-            logger.info("No of Variant Contexts: " + vcs.size());
-            genomeRepo.save("1k", vcs);
         }
 
         private void loadTranscripts() throws SerializationException {

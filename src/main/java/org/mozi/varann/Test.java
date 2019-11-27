@@ -13,7 +13,6 @@ import de.charite.compbio.jannovar.vardbs.base.DBAnnotationOptions;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
 import de.charite.compbio.jannovar.vardbs.facade.DBVariantContextAnnotator;
 import de.charite.compbio.jannovar.vardbs.g1k.ThousandGenomesAnnotationDriver;
-import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -35,7 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -57,10 +55,9 @@ public class Test {
             igniteSpringDataInit();
             dataLoader = new DataLoader(properties.getProperty("basePath"), transcriptRepo, genomeRepo, refRepo);
             ExecutorService executorService = Executors.newFixedThreadPool(5);
-            CompletableFuture<Void> future = CompletableFuture.supplyAsync(Test::populateRepository, executorService).thenRunAsync(Test::annotateVCF);
+            CompletableFuture<Void> future = CompletableFuture.supplyAsync(Test::populateRepository, executorService).thenRunAsync(Test::annotateVCF).thenAccept((vc) ->  ctx.destroy());
             executorService.shutdown();
             logger.info("Waiting for other threads to finish....");
-//            ctx.destroy();
         } catch (IOException ex){
             ex.printStackTrace();
         }
@@ -123,8 +120,8 @@ public class Test {
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
             options.setIdentifierPrefix("1K_");
-            CloseableIterator<VariantContext> vcs =  (CloseableIterator<VariantContext>)genomeRepo.findById("1k").get().iterator();
-            DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(vcs, refRepo.findById("hg38").get(), options), options);
+            VCFFileReader vcfFileReader = new VCFFileReader(FileUtils.getFile(basePath, "1000GENOMES-phase_3.vcf.gz"));
+            DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(vcfFileReader, refRepo.findById("hg38").get(), options), options);
             thousandGenomeAnno.extendHeader(vcfHeader);
             stream = stream.map(thousandGenomeAnno::annotateVariantContext);
             JannovarData data = transcriptRepo.findById("hg38_ensembl").orElse(null);
