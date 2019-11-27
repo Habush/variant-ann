@@ -2,7 +2,6 @@ package org.mozi.varann;
 
 
 import de.charite.compbio.jannovar.data.JannovarData;
-import de.charite.compbio.jannovar.data.JannovarDataSerializer;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.htsjdk.VariantContextAnnotator;
 import de.charite.compbio.jannovar.htsjdk.VariantContextWriterConstructionHelper;
@@ -16,13 +15,11 @@ import de.charite.compbio.jannovar.vardbs.facade.DBVariantContextAnnotator;
 import de.charite.compbio.jannovar.vardbs.g1k.ThousandGenomesAnnotationDriver;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
 import org.apache.commons.io.FileUtils;
 import org.mozi.varann.data.DataLoader;
 import org.mozi.varann.data.GenomeDbRepository;
@@ -36,8 +33,11 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 public class Test {
@@ -56,9 +56,11 @@ public class Test {
             properties.load(in);
             igniteSpringDataInit();
             dataLoader = new DataLoader(properties.getProperty("basePath"), transcriptRepo, genomeRepo, refRepo);
-            populateRepository();
-            annotateVCF();
-            ctx.destroy();
+            ExecutorService executorService = Executors.newFixedThreadPool(5);
+            CompletableFuture<Void> future = CompletableFuture.supplyAsync(Test::populateRepository, executorService).thenRunAsync(Test::annotateVCF);
+            executorService.shutdown();
+            logger.info("Waiting for other threads to finish....");
+//            ctx.destroy();
         } catch (IOException ex){
             ex.printStackTrace();
         }
@@ -80,7 +82,7 @@ public class Test {
         genomeRepo = ctx.getBean(GenomeDbRepository.class);
     }
 
-    private static void populateRepository() {
+    private static Void populateRepository() {
 
         try {
             dataLoader.init();
@@ -88,6 +90,8 @@ public class Test {
         } catch (SerializationException | JannovarVarDBException ex) {
             ex.printStackTrace();
         }
+
+        return null;
     }
 
     private static VariantContextWriter buildVariantContextWrite(VCFHeader header, String filename) {
@@ -111,7 +115,7 @@ public class Test {
     }
 
 
-    private static void annotateVCF() {
+    private static Void annotateVCF() {
         try(VCFFileReader vcfReader = new VCFFileReader(FileUtils.getFile(properties.getProperty("basePath"), "example.vcf"), false)) {
             String basePath = properties.getProperty("basePath");
             logger.info("Starting annotation...");
@@ -141,5 +145,6 @@ public class Test {
         catch (JannovarVarDBException ex) {
             ex.printStackTrace();
         }
+        return null;
     }
 }

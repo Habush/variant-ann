@@ -3,6 +3,7 @@ package org.mozi.varann.data;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * author: Abdulrahman Semrie
@@ -45,7 +47,9 @@ public class DataLoader {
             File[] indexFiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".tbi"));
             assert vcfiles != null && indexFiles != null;
             VCFFileReader vcfReader = new VCFFileReader(new File(vcfiles[0].getPath()), new File(indexFiles[0].getPath()), true);
-            genomeRepo.save("1k", vcfReader.iterator().toList());
+            List<VariantContext> vcs = vcfReader.iterator().toList();
+            logger.info("No of Variant Contexts: " + vcs.size());
+            genomeRepo.save("1k", vcs);
         }
 
         private void loadTranscripts() throws SerializationException {
