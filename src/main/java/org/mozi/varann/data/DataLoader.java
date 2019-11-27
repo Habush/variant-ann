@@ -1,13 +1,16 @@
 package org.mozi.varann.data;
 
+import de.charite.compbio.jannovar.data.JannovarData;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import org.apache.ignite.IgniteCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -18,19 +21,19 @@ import java.util.List;
  *
  */
 public class DataLoader {
-        private TranscriptDbRepository transcriptRepo;
-        private GenomeDbRepository genomeRepo;
-        private ReferenceRepository refRepo;
+        private IgniteCache<String, JannovarData> transcriptRepo;
+        private IgniteCache<String, VCFFileReader> genomeRepo;
+        private IgniteCache<String, AlleleMatcher> refRepo;
 
         private File basePath;
 
         private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
 
-        public DataLoader(String path, TranscriptDbRepository transRepo, GenomeDbRepository gRepo, ReferenceRepository refRepo) {
-            this.transcriptRepo = transRepo;
-            this.genomeRepo = gRepo;
-            this.refRepo = refRepo;
+        public DataLoader(String path, IgniteCache<String, JannovarData> transcriptRepo, IgniteCache<String, AlleleMatcher> refRepo, IgniteCache<String, VCFFileReader> genomeRepo) {
             this.basePath = new File(path);
+            this.transcriptRepo = transcriptRepo;
+            this.refRepo = refRepo;
+            this.genomeRepo = genomeRepo;
         }
 
         public void init() throws JannovarVarDBException, SerializationException {
@@ -38,8 +41,8 @@ public class DataLoader {
             loadTranscripts();;
             logger.info("Loading Reference DBs");
             loadReferences();
-//            logger.info("Loading 1000 Genome data");
-//            load1kGenomicDb();
+            logger.info("Loading 1000 Genome data");
+            load1kGenomicDb();
         }
 
         private void load1kGenomicDb() {
@@ -47,6 +50,7 @@ public class DataLoader {
             File[] indexFiles = basePath.listFiles((dir, name) -> name.startsWith("1000GENOMES") && name.endsWith(".tbi"));
             assert vcfiles != null && indexFiles != null;
             VCFFileReader vcfReader = new VCFFileReader(new File(vcfiles[0].getPath()), new File(indexFiles[0].getPath()), true);
+            genomeRepo.put("1k", vcfReader);
         }
 
         private void loadTranscripts() throws SerializationException {
@@ -57,7 +61,7 @@ public class DataLoader {
             for(File file : transFiles) {
                 logger.info("Loading transcript file " + file.getName());
                 String name = file.getName().split("\\.")[0];
-                transcriptRepo.save(name,  DataReader.readSerializedObj(file.getPath()));
+                transcriptRepo.put(name,  DataReader.readSerializedObj(file.getPath()));
             }
         }
 
@@ -77,7 +81,7 @@ public class DataLoader {
                 }
                 assert name != null;
 
-                refRepo.save(name, new AlleleMatcher(file.getPath()));
+                refRepo.put(name, new AlleleMatcher(file.getPath()));
             }
         }
 
