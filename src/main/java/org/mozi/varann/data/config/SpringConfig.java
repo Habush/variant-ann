@@ -10,6 +10,7 @@ import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.apache.ignite.springdata20.repository.config.EnableIgniteRepositories;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
@@ -21,9 +22,10 @@ import java.util.Arrays;
 
 @Configuration
 @EnableIgniteRepositories(basePackages = "org.mozi.varann.data")
+@ComponentScan("org.mozi.varann.data")
 public class SpringConfig {
 
-    /*@Bean
+    @Bean
     public static PropertyPlaceholderConfigurer properties() {
         PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
         ClassPathResource[] resources = new ClassPathResource[]{
@@ -32,7 +34,7 @@ public class SpringConfig {
         ppc.setLocations(resources);
         ppc.setIgnoreUnresolvablePlaceholders(true);
         return ppc;
-    }*/
+    }
 
     @Bean
     public Ignite igniteInstance(){

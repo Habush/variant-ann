@@ -38,12 +38,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
+
 public class Test {
 
     private static AnnotationConfigApplicationContext ctx;
     private static ReferenceRepository refRepo;
     private static TranscriptDbRepository transcriptRepo;
-    private static GenomeDbRepository genomeRepo;
     private static DataLoader dataLoader;
     private static Properties properties;
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
@@ -53,7 +53,6 @@ public class Test {
         try(InputStream in = Test.class.getResourceAsStream("/application.properties")) {
             properties.load(in);
             igniteSpringDataInit();
-            dataLoader = new DataLoader(properties.getProperty("basePath"), transcriptRepo, genomeRepo, refRepo);
             ExecutorService executorService = Executors.newFixedThreadPool(5);
             CompletableFuture<Void> future = CompletableFuture.supplyAsync(Test::populateRepository, executorService).thenRunAsync(Test::annotateVCF).thenAccept((vc) ->  ctx.destroy());
             executorService.shutdown();
@@ -76,7 +75,7 @@ public class Test {
         ctx.refresh();
         refRepo = ctx.getBean(ReferenceRepository.class);
         transcriptRepo = ctx.getBean(TranscriptDbRepository.class);
-        genomeRepo = ctx.getBean(GenomeDbRepository.class);
+        dataLoader = ctx.getBean(DataLoader.class);
     }
 
     private static Void populateRepository() {
@@ -120,7 +119,7 @@ public class Test {
             Stream<VariantContext> stream = vcfReader.iterator().stream();
             DBAnnotationOptions options = DBAnnotationOptions.createDefaults();
             options.setIdentifierPrefix("1K_");
-            VCFFileReader vcfFileReader = new VCFFileReader(FileUtils.getFile(basePath, "1000GENOMES-phase_3.vcf.gz"));
+            VCFFileReader vcfFileReader = new VCFFileReader(new File(dataLoader.getDbPathMap().get("1k")));
             DBVariantContextAnnotator thousandGenomeAnno = new DBVariantContextAnnotator(new ThousandGenomesAnnotationDriver(vcfFileReader, refRepo.findById("hg38").get(), options), options);
             thousandGenomeAnno.extendHeader(vcfHeader);
             stream = stream.map(thousandGenomeAnno::annotateVariantContext);
