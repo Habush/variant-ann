@@ -19,6 +19,6 @@ public class AnnotationController {
     @RequestMapping(value = "/annotate/{id}", method = RequestMethod.GET)
     public String annotateById(@RequestParam(value = "db", defaultValue="1k") String db, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
                            @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript,  @PathVariable String id){
-        return annotationHelper.annotateVariant(id, db, ref, transcript).toString();
+        return annotationHelper.annotateVariantById(id, db, ref, transcript).toString();
     }
 }
