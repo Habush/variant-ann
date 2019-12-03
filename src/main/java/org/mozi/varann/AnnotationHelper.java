@@ -46,16 +46,17 @@ public class AnnotationHelper {
     @Autowired
     private ReferenceRepository referenceRepo;
 
-    public AnnotationHelper(){}
+    public AnnotationHelper() {
+    }
 
-    private static final Logger logger  = LogManager.getLogger(AnnotationHelper.class);
+    private static final Logger logger = LogManager.getLogger(AnnotationHelper.class);
 
     public VariantContext parseGenomeChange(String changeStr, ReferenceDictionary refDict) {
         //chr2:109090A>C
         Pattern pat = Pattern.compile("(chr[0-9MXY]+):([0-9]+)([ACGTN]*)>([ACGTN]*)");
         Matcher mat = pat.matcher(changeStr);
-        if(!mat.matches()){
-            logger.error( "Input string for the chromosomal change " + changeStr
+        if (!mat.matches()) {
+            logger.error("Input string for the chromosomal change " + changeStr
                     + "is invalid. Example: chr21:866511A>C");
         }
 
@@ -70,9 +71,9 @@ public class AnnotationHelper {
     }
 
     public DBVariantContextAnnotator getAnnotationDriver(String db, String ref) throws JannovarVarDBException {
-        switch (db){
+        switch (db) {
             case "1k":
-                return new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(),new DBAnnotationOptions(true, false, "1K", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
+                return new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "1K", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
             case "clinvar":
                 return new DBVariantContextAnnotatorFactory().constructClinVar(dataLoader.getDbPathMap().get("clinvar"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Clinvar", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
             case "dbsnp":
@@ -99,8 +100,7 @@ public class AnnotationHelper {
             resultVc = annotator.annotateVariantContext(resultVc);
 
             return resultVc;
-        }
-        catch (JannovarVarDBException e) {
+        } catch (JannovarVarDBException e) {
             e.printStackTrace();
         }
         return null;
@@ -116,8 +116,7 @@ public class AnnotationHelper {
             resultVc = annotator.annotateVariantContext(resultVc);
 
             return resultVc;
-        }
-        catch (JannovarVarDBException e) {
+        } catch (JannovarVarDBException e) {
             e.printStackTrace();
         }
         return null;
@@ -126,42 +125,49 @@ public class AnnotationHelper {
 
     /**
      * This method annotates a vcf using the database specified
-     * @param file - the uploaded vcf file
-     * @param db - the database selected for annotation
-     * @param ref - the reference database
+     *
+     * @param file       - the uploaded vcf file
+     * @param db         - the database selected for annotation
+     * @param ref        - the reference database
      * @param transcript - the transcript database
      * @return - a vcf {@link File} that contains the annotated result
      */
     public String annotateVcf(MultipartFile file, String db, String ref, String transcript) {
-        try (VCFFileReader vcfFileReader = new VCFFileReader(new File(file.getName()), false)){
-               VCFHeader header = vcfFileReader.getFileHeader();
-               Stream<VariantContext> stream = vcfFileReader.iterator().stream();
-               DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
-               driver.extendHeader(header);
-               stream = stream.map(driver::annotateVariantContext);
 
-               JannovarData data = transcriptRepo.findById(transcript).get();
+        try {
+            File vcfFile = File.createTempFile("request", "vcf");
+
+            vcfFile.deleteOnExit();
+            file.transferTo(vcfFile);
+            try (VCFFileReader vcfFileReader = new VCFFileReader(vcfFile, false)) {
+                VCFHeader header = vcfFileReader.getFileHeader();
+                Stream<VariantContext> stream = vcfFileReader.iterator().stream();
+                DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
+                driver.extendHeader(header);
+                stream = stream.map(driver::annotateVariantContext);
+
+                JannovarData data = transcriptRepo.findById(transcript).get();
                 VariantEffectHeaderExtender extender = new VariantEffectHeaderExtender();
                 extender.addHeaders(header);
-               VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
+                VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
 
-               stream = stream.map(annotator::annotateVariantContext);
+                stream = stream.map(annotator::annotateVariantContext);
 
-               File resultFile = File.createTempFile(db+"-" + ref, "vcf");
-
-               try(VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(header, resultFile.getAbsolutePath());
-                   VariantContextProcessor sink = new ConsumerProcessor(writer::add)) {
+                File resultFile = File.createTempFile(db + "-" + ref, "vcf");
+                resultFile.deleteOnExit();
+                try (VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(header, resultFile.getAbsolutePath());
+                     VariantContextProcessor sink = new ConsumerProcessor(writer::add)) {
                     stream.forEachOrdered(sink::put);
-               }
+                }
 
-               return resultFile.getAbsolutePath();
+                return resultFile.getAbsolutePath();
 
-        }catch (JannovarVarDBException | IOException ex){
-            ex.printStackTrace();
+            }
+        } catch (IOException | JannovarVarDBException e) {
+            e.printStackTrace();
         }
         return null;
     }
-
 
 
 }
