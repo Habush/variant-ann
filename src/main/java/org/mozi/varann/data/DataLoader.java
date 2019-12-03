@@ -56,7 +56,10 @@ public class DataLoader {
                     dbPathMap.put("dbsnp", file.getAbsolutePath());
                 } else if(name.contains("cosmic")){
                     dbPathMap.put("cosmic", file.getAbsolutePath());
-                }else {
+                } else if(name.contains("exac")){
+                    dbPathMap.put("exac", file.getAbsolutePath());
+                }
+                else {
                     throw new IllegalArgumentException("Unknown vcf file exception " + name);
                 }
             }

@@ -77,19 +77,19 @@ public class AnnotationHelper {
         for (String db : dbs) {
             switch (db) {
                 case "1k":
-                    drivers.add(new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "1K", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "1K_", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
                     break;
                 case "clinvar":
-                    drivers.add(new DBVariantContextAnnotatorFactory().constructClinVar(dataLoader.getDbPathMap().get("clinvar"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Clinvar", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructClinVar(dataLoader.getDbPathMap().get("clinvar"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Clinvar_", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
                     break;
                 case "dbsnp":
-                    drivers.add(new DBVariantContextAnnotatorFactory().constructDBSNP(dataLoader.getDbPathMap().get("dbsnp"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Dbsnp", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructDBSNP(dataLoader.getDbPathMap().get("dbsnp"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "DbSNP_", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
                     break;
                 case "cosmic":
-                    drivers.add(new DBVariantContextAnnotatorFactory().constructCosmic(dataLoader.getDbPathMap().get("cosmic"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Cosmic", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructCosmic(dataLoader.getDbPathMap().get("cosmic"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Cosmic_", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
                     break;
                 case "exac":
-                    drivers.add(new DBVariantContextAnnotatorFactory().constructExac(dataLoader.getDbPathMap().get("exac"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Exac", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructExac(dataLoader.getDbPathMap().get("exac"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Exac_", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
                     break;
                 default:
                     throw new IllegalArgumentException(db + " Annotation DB has no be implemented yet :(");
