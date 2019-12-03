@@ -3,11 +3,9 @@ package org.mozi.varann.data;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -29,7 +27,7 @@ public class DataLoader {
         private File basePath;
         @Getter
         private HashMap<String, String> dbPathMap = new HashMap<>();
-        private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
+        private static final Logger logger = LogManager.getLogger(DataLoader.class);
 
         public DataLoader(@Value("${basePath}") String path) {
             this.basePath = new File(path);
@@ -44,6 +42,7 @@ public class DataLoader {
         }
 
         private void loadDbPath() {
+            logger.info("Getting the annotation db paths");
             File[] vcfiles = basePath.listFiles((dir, name) -> name.endsWith(".vcf.gz"));
             assert vcfiles != null && vcfiles.length > 0;
 

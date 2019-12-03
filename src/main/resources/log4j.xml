@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC
+        "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration debug="false">
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <param name="target" value="System.out" />
+        <param name="threshold" value="debug" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{HH:mm:ss.SSS} [%t] %level - %msg%n"/>
+        </layout>
+    </appender>
+    <root>
+        <priority value="info" />
+        <appender-ref ref="console" />
+<!--        <appender-ref ref="FILE" />-->
+<!--        <appender-ref ref="FILE_PER_SIZE" />-->
+<!--        <appender-ref ref="FILE_PER_DAY" />-->
+    </root>
+</log4j:configuration>
