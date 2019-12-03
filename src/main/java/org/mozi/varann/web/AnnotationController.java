@@ -22,22 +22,22 @@ public class AnnotationController {
     private StorageService storageService;
 
     @RequestMapping(value = "/annotate", method = RequestMethod.GET)
-    public String annotate(@RequestParam(value = "db", defaultValue="1k") String db, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
+    public String annotate(@RequestParam(value = "dbs", defaultValue="1k") String[] dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
                            @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript, @RequestParam(value = "variant") String variant){
-        return annotationHelper.annotateVariant(variant, db, ref, transcript).toString();
+        return annotationHelper.annotateVariant(variant, dbs, ref, transcript).toString();
     }
     @RequestMapping(value = "/annotate/{id}", method = RequestMethod.GET)
-    public String annotateById(@RequestParam(value = "db", defaultValue="1k") String db, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
+    public String annotateById(@RequestParam(value = "dbs", defaultValue="1k") String[] dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
                            @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript,  @PathVariable String id){
-        return annotationHelper.annotateVariantById(id, db, ref, transcript).toString();
+        return annotationHelper.annotateVariantById(id, dbs, ref, transcript).toString();
     }
 
     @PostMapping("/annotate")
     @ResponseBody
-    public ResponseEntity<Resource> annotateVcf(@RequestParam("file") MultipartFile file, @RequestParam(value = "db", defaultValue="1k") String db, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
+    public ResponseEntity<Resource> annotateVcf(@RequestParam("file") MultipartFile file, @RequestParam(value = "dbs", defaultValue = "1k") String[] dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
                                           @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript) {
         storageService.store(file);
-        String resultFile = annotationHelper.annotateVcf(file, db, ref, transcript);
+        String resultFile = annotationHelper.annotateVcf(file, dbs, ref, transcript);
 
         Resource resource = storageService.loadAsResource(resultFile);
 

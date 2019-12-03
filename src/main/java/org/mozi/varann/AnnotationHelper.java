@@ -7,6 +7,7 @@ import de.charite.compbio.jannovar.htsjdk.VariantContextWriterConstructionHelper
 import de.charite.compbio.jannovar.htsjdk.VariantEffectHeaderExtender;
 import de.charite.compbio.jannovar.mendel.filter.ConsumerProcessor;
 import de.charite.compbio.jannovar.mendel.filter.VariantContextProcessor;
+import de.charite.compbio.jannovar.vardbs.base.DBAnnotationDriver;
 import de.charite.compbio.jannovar.vardbs.base.DBAnnotationOptions;
 import de.charite.compbio.jannovar.vardbs.base.DatabaseVariantContextProvider;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -70,31 +72,39 @@ public class AnnotationHelper {
         return builder.make();
     }
 
-    public DBVariantContextAnnotator getAnnotationDriver(String db, String ref) throws JannovarVarDBException {
-        switch (db) {
-            case "1k":
-                return new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "1K", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
-            case "clinvar":
-                return new DBVariantContextAnnotatorFactory().constructClinVar(dataLoader.getDbPathMap().get("clinvar"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Clinvar", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
-            case "dbsnp":
-                return new DBVariantContextAnnotatorFactory().constructDBSNP(dataLoader.getDbPathMap().get("dbsnp"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Dbsnp", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
-            case "cosmic":
-                return new DBVariantContextAnnotatorFactory().constructCosmic(dataLoader.getDbPathMap().get("cosmic"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Cosmic", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
-            case "exac":
-                return new DBVariantContextAnnotatorFactory().constructExac(dataLoader.getDbPathMap().get("exac"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Exac", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY));
-            default:
-                throw new IllegalArgumentException(db + " Annotation DB has no be implemented yet :(");
+    public List<DBVariantContextAnnotator> getAnnotationDriver(String[] dbs, String ref) throws JannovarVarDBException {
+        List<DBVariantContextAnnotator> drivers = new ArrayList<>();
+        for (String db : dbs) {
+            switch (db) {
+                case "1k":
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructThousandGenomes(dataLoader.getDbPathMap().get("1k"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "1K", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                case "clinvar":
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructClinVar(dataLoader.getDbPathMap().get("clinvar"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Clinvar", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                case "dbsnp":
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructDBSNP(dataLoader.getDbPathMap().get("dbsnp"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Dbsnp", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                case "cosmic":
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructCosmic(dataLoader.getDbPathMap().get("cosmic"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Cosmic", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                case "exac":
+                    drivers.add(new DBVariantContextAnnotatorFactory().constructExac(dataLoader.getDbPathMap().get("exac"), referenceRepo.findById(ref).get(), new DBAnnotationOptions(true, false, "Exac", DBAnnotationOptions.MultipleMatchBehaviour.BEST_ONLY)));
+                default:
+                    throw new IllegalArgumentException(db + " Annotation DB has no be implemented yet :(");
+            }
         }
+
+        return drivers;
 
     }
 
-    public VariantContext annotateVariant(String changeStr, String db, String ref, String transcript) {
+    public VariantContext annotateVariant(String changeStr, String[] dbs, String ref, String transcript) {
         try {
             JannovarData data = transcriptRepo.findById(transcript).get();
             VariantContext vc = parseGenomeChange(changeStr, data.getRefDict());
-            DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
+            List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
 
-            VariantContext resultVc = driver.annotateVariantContext(vc);
+            VariantContext resultVc = null;
+            for (DBVariantContextAnnotator driver: drivers) {
+                resultVc = driver.annotateVariantContext(vc);
+            }
 
             VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
             resultVc = annotator.annotateVariantContext(resultVc);
@@ -106,11 +116,15 @@ public class AnnotationHelper {
         return null;
     }
 
-    public VariantContext annotateVariantById(String id, String db, String ref, String transcript) {
+    public VariantContext annotateVariantById(String id, String[] dbs, String ref, String transcript) {
         try {
             JannovarData data = transcriptRepo.findById(transcript).get();
-            DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
-            VariantContext resultVc = driver.annotateVariantContext(id);
+            List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
+
+            VariantContext resultVc = null;
+            for (DBVariantContextAnnotator driver: drivers) {
+                resultVc = driver.annotateVariantContext(id);
+            }
 
             VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
             resultVc = annotator.annotateVariantContext(resultVc);
@@ -127,12 +141,12 @@ public class AnnotationHelper {
      * This method annotates a vcf using the database specified
      *
      * @param file       - the uploaded vcf file
-     * @param db         - the database selected for annotation
+     * @param dbs         - the databases selected for annotation
      * @param ref        - the reference database
      * @param transcript - the transcript database
      * @return - a vcf {@link File} that contains the annotated result
      */
-    public String annotateVcf(MultipartFile file, String db, String ref, String transcript) {
+    public String annotateVcf(MultipartFile file, String[] dbs, String ref, String transcript) {
 
         try {
             File vcfFile = File.createTempFile("request", "vcf");
@@ -142,9 +156,12 @@ public class AnnotationHelper {
             try (VCFFileReader vcfFileReader = new VCFFileReader(vcfFile, false)) {
                 VCFHeader header = vcfFileReader.getFileHeader();
                 Stream<VariantContext> stream = vcfFileReader.iterator().stream();
-                DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
-                driver.extendHeader(header);
-                stream = stream.map(driver::annotateVariantContext);
+                List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
+
+                for(DBVariantContextAnnotator driver : drivers){
+                    driver.extendHeader(header);
+                    stream = stream.map(driver::annotateVariantContext);
+                }
 
                 JannovarData data = transcriptRepo.findById(transcript).get();
                 VariantEffectHeaderExtender extender = new VariantEffectHeaderExtender();
@@ -153,9 +170,9 @@ public class AnnotationHelper {
 
                 stream = stream.map(annotator::annotateVariantContext);
 
-                File resultFile = File.createTempFile(db + "-" + ref, "vcf");
+                File resultFile = File.createTempFile(dbs[0] + "-" + ref, ".vcf");
                 resultFile.deleteOnExit();
-                try (VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(header, resultFile.getAbsolutePath());
+                try (VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(header, resultFile.getPath());
                      VariantContextProcessor sink = new ConsumerProcessor(writer::add)) {
                     stream.forEachOrdered(sink::put);
                 }
