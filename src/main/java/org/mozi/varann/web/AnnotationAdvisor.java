@@ -1,11 +1,12 @@
 package org.mozi.varann.web;
 
+import org.mozi.varann.util.StorageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import util.AnnotationException;
+import org.mozi.varann.util.AnnotationException;
 
 @ControllerAdvice
 public class AnnotationAdvisor {
@@ -16,4 +17,9 @@ public class AnnotationAdvisor {
     String annotationException(AnnotationException ex) {
         return ex.getMessage();
     }
+
+    @ResponseBody
+    @ExceptionHandler(StorageException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    String fileNotFoundException(StorageException ex) {return ex.getMessage();}
 }

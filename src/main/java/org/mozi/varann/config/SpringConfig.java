@@ -32,7 +32,7 @@ public class SpringConfig {
         return ppc;
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public Ignite igniteInstance(){
         IgniteConfiguration cfg = new IgniteConfiguration();
 //        TcpDiscoverySpi spi = new TcpDiscoverySpi();

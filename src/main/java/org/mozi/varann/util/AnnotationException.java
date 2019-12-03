@@ -1,4 +1,4 @@
-package util;
+package org.mozi.varann.util;
 
 public class AnnotationException extends RuntimeException {
 

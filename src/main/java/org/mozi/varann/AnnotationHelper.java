@@ -3,6 +3,10 @@ package org.mozi.varann;
 import de.charite.compbio.jannovar.data.JannovarData;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.htsjdk.VariantContextAnnotator;
+import de.charite.compbio.jannovar.htsjdk.VariantContextWriterConstructionHelper;
+import de.charite.compbio.jannovar.htsjdk.VariantEffectHeaderExtender;
+import de.charite.compbio.jannovar.mendel.filter.ConsumerProcessor;
+import de.charite.compbio.jannovar.mendel.filter.VariantContextProcessor;
 import de.charite.compbio.jannovar.vardbs.base.DBAnnotationOptions;
 import de.charite.compbio.jannovar.vardbs.base.DatabaseVariantContextProvider;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
@@ -11,6 +15,10 @@ import de.charite.compbio.jannovar.vardbs.facade.DBVariantContextAnnotatorFactor
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.mozi.varann.data.DataLoader;
@@ -18,7 +26,10 @@ import org.mozi.varann.data.ReferenceRepository;
 import org.mozi.varann.data.TranscriptDbRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -111,6 +122,44 @@ public class AnnotationHelper {
         }
         return null;
 
+    }
+
+    /**
+     * This method annotates a vcf using the database specified
+     * @param file - the uploaded vcf file
+     * @param db - the database selected for annotation
+     * @param ref - the reference database
+     * @param transcript - the transcript database
+     * @return - a vcf {@link File} that contains the annotated result
+     */
+    public String annotateVcf(MultipartFile file, String db, String ref, String transcript) {
+        try (VCFFileReader vcfFileReader = new VCFFileReader(new File(file.getName()), false)){
+               VCFHeader header = vcfFileReader.getFileHeader();
+               Stream<VariantContext> stream = vcfFileReader.iterator().stream();
+               DBVariantContextAnnotator driver = getAnnotationDriver(db, ref);
+               driver.extendHeader(header);
+               stream = stream.map(driver::annotateVariantContext);
+
+               JannovarData data = transcriptRepo.findById(transcript).get();
+                VariantEffectHeaderExtender extender = new VariantEffectHeaderExtender();
+                extender.addHeaders(header);
+               VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
+
+               stream = stream.map(annotator::annotateVariantContext);
+
+               File resultFile = File.createTempFile(db+"-" + ref, "vcf");
+
+               try(VariantContextWriter writer = VariantContextWriterConstructionHelper.openVariantContextWriter(header, resultFile.getAbsolutePath());
+                   VariantContextProcessor sink = new ConsumerProcessor(writer::add)) {
+                    stream.forEachOrdered(sink::put);
+               }
+
+               return resultFile.getAbsolutePath();
+
+        }catch (JannovarVarDBException | IOException ex){
+            ex.printStackTrace();
+        }
+        return null;
     }
 
 
