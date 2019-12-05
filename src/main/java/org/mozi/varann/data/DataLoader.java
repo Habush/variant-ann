@@ -16,7 +16,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.mozi.varann.data.fs.FileSystemWrapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -38,9 +37,9 @@ public class DataLoader {
 
     @Value("${basePath}")
     private String basePath;
+    private final Ignite ignite;
     private final TranscriptDbRepository transcriptRepo;
     private final ReferenceRepository refRepo;
-    private final Ignite ignite;
 
     @Getter
     private HashMap<String, String> dbPathMap = new HashMap<>();

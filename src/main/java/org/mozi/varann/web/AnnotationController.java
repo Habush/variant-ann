@@ -1,5 +1,6 @@
 package org.mozi.varann.web;
 
+import lombok.RequiredArgsConstructor;
 import org.mozi.varann.AnnotationHelper;
 import org.mozi.varann.util.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +15,12 @@ import javax.xml.ws.Response;
 import java.io.File;
 
 @Controller
+@RequiredArgsConstructor
 public class AnnotationController {
 
-    @Autowired
-    private AnnotationHelper annotationHelper;
-    @Autowired
-    private StorageService storageService;
+
+    private final AnnotationHelper annotationHelper;
+    private final StorageService storageService;
 
     @RequestMapping(value = "/annotate", method = RequestMethod.GET)
     public String annotate(@RequestParam(value = "dbs", defaultValue="1k") String[] dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,

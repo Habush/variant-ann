@@ -19,6 +19,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -40,18 +41,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 public class AnnotationHelper {
-    @Autowired
-    private DataLoader dataLoader;
-    @Autowired
-    private TranscriptDbRepository transcriptRepo;
-    @Autowired
-    private ReferenceRepository referenceRepo;
+
+    private final DataLoader dataLoader;
+    private final TranscriptDbRepository transcriptRepo;
+    private final ReferenceRepository referenceRepo;
 
     private static final Logger logger = LogManager.getLogger(AnnotationHelper.class);
 
-    public AnnotationHelper() {
-    }
 
     public VariantContext parseGenomeChange(String changeStr, ReferenceDictionary refDict) {
         //chr2:109090A>C

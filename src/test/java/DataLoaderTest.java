@@ -50,7 +50,7 @@ public class DataLoaderTest {
 
     @BeforeEach
     public void initDataLoader() {
-        dataLoader = new DataLoader(transcriptRepo, refRepo, ignite);
+        dataLoader = new DataLoader(ignite, transcriptRepo, refRepo);
         ReflectionTestUtils.setField(dataLoader, "basePath", "src/test/resources");
     }
 

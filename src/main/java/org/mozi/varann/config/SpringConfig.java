@@ -60,10 +60,9 @@ public class SpringConfig {
 
         //Cache Configuration
         DataStorageConfiguration storageCfg = new DataStorageConfiguration();
-        storageCfg.setPageSize(128*1024);
-
-
-        return Ignition.start(cfg);
+        storageCfg.setPageSize(16*1024);
+        cfg.setDataStorageConfiguration(storageCfg);
+        return Ignition.getOrStart(cfg);
     }
 
 
