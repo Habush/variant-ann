@@ -4,18 +4,13 @@ import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
 import htsjdk.samtools.seekablestream.SeekableStream;
-import htsjdk.samtools.util.BlockCompressedInputStream;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.tribble.readers.AsciiLineReader;
-import htsjdk.tribble.readers.AsciiLineReaderIterator;
+import htsjdk.tribble.readers.LineIteratorImpl;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderVersion;
 import lombok.Getter;
-import org.apache.commons.net.imap.IMAP;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -24,14 +19,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -131,23 +129,29 @@ public class DataLoader {
     private void loadGenomeCache() {
         logger.info("Loading VCF files into cache");
         try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
-            this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
+            for(Map.Entry<String, String> entry: this.dbPathMap.entrySet()){
                 try {
                     String path = entry.getValue();
                     final VCFCodec vcfCodec = getVCFCodec(path);
                     try (Stream<String> lines = Files.lines(Paths.get(path))) {
                         //filter out header files
                         logger.info("Loading " + entry.getKey() + "....");
-                        dataStreamer.addData(entry.getKey(), lines.filter(line -> !line.startsWith("#"))
-                                .map(vcfCodec::decode).collect(Collectors.toList()));
+                        List<VariantContext> vcs = lines.filter(line -> !line.startsWith("#"))
+                                .map(vcfCodec::decode).collect(Collectors.toList());
+                        dataStreamer.addData(entry.getKey(), vcs);
 
                     }
                 } catch (IOException ex) {
                     logger.warn("Encountered IOException while reading " + entry.getKey());
                     ex.printStackTrace();
                 }
+            }
+/*
+            this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
+
 
             });
+*/
         }
     }
 
@@ -156,7 +160,7 @@ public class DataLoader {
                      fileSystemWrapper.open(getFirstPath(path))) {
             InputStream is = bufferAndDecompressIfNecessary(headerIn);
             VCFCodec vcfCodec = new VCFCodec();
-            vcfCodec.readHeader(new AsciiLineReaderIterator(AsciiLineReader.from(is)));
+            vcfCodec.readHeader(new LineIteratorImpl(AsciiLineReader.from(is)));
             return vcfCodec;
         }
     }
