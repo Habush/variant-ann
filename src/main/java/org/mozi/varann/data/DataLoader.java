@@ -3,34 +3,27 @@ package org.mozi.varann.data;
 import de.charite.compbio.jannovar.data.SerializationException;
 import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
-import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.tribble.FeatureCodecHeader;
 import htsjdk.tribble.readers.AsciiLineReader;
-import htsjdk.tribble.readers.AsciiLineReaderIterator;
 import htsjdk.tribble.readers.LineIteratorImpl;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.mozi.varann.data.fs.FileSystemWrapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import javax.print.DocFlavor;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -39,25 +32,19 @@ import java.util.zip.GZIPInputStream;
  * author: Abdulrahman Semrie
  */
 
-@Component
+@Service
+@RequiredArgsConstructor
 public class DataLoader {
-    @Autowired
-    private TranscriptDbRepository transcriptRepo;
-    @Autowired
-    private ReferenceRepository refRepo;
-    @Autowired
-    private FileSystemWrapper fileSystemWrapper;
-    @Autowired
-    private Ignite ignite;
 
-    private File basePath;
+    @Value("${basePath}")
+    private String basePath;
+    private final TranscriptDbRepository transcriptRepo;
+    private final ReferenceRepository refRepo;
+    private final Ignite ignite;
+
     @Getter
     private HashMap<String, String> dbPathMap = new HashMap<>();
-    private static final Logger logger = LogManager.getLogger(DataLoader.class);
-
-    public DataLoader(@Value("${basePath}") String path) {
-        this.basePath = new File(path);
-    }
+    private static Logger logger = LogManager.getLogger(DataLoader.class);
 
     public void init() throws JannovarVarDBException, SerializationException {
         loadDbPath();
@@ -68,9 +55,9 @@ public class DataLoader {
         loadReferences();
     }
 
-    private void loadDbPath() {
+    public void loadDbPath() {
         logger.info("Getting the annotation db paths");
-        File[] vcfiles = basePath.listFiles((dir, name) -> name.endsWith(".vcf.gz"));
+        File[] vcfiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".vcf.gz"));
         assert vcfiles != null && vcfiles.length > 0;
 
         for (File file : vcfiles) {
@@ -86,14 +73,15 @@ public class DataLoader {
             } else if (name.contains("exac")) {
                 dbPathMap.put("exac", file.getAbsolutePath());
             } else {
-                throw new IllegalArgumentException("Unknown vcf file exception " + name);
+                logger.info("Putting in " + name + " in the table");
+                dbPathMap.put(name.split("\\.")[0], file.getAbsolutePath());
             }
         }
 
     }
 
-    private void loadTranscripts() throws SerializationException {
-        File[] transFiles = basePath.listFiles((dir, name) -> name.endsWith(".ser"));
+    public void loadTranscripts() throws SerializationException {
+        File[] transFiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".ser"));
 
         assert transFiles != null;
         assert transFiles.length > 0;
@@ -104,8 +92,8 @@ public class DataLoader {
         }
     }
 
-    private void loadReferences() throws JannovarVarDBException {
-        File[] fastFiles = basePath.listFiles((dir, name) -> name.endsWith(".fa"));
+    public void loadReferences() throws JannovarVarDBException {
+        File[] fastFiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".fa"));
 
         assert fastFiles != null;
         for (File file : fastFiles) {
@@ -128,9 +116,13 @@ public class DataLoader {
      * This method patch loads {@link htsjdk.variant.variantcontext.VariantContext}s from vcf files and puts them in to an
      * {@link org.apache.ignite.IgniteCache}
      */
-    private void loadGenomeCache() {
+    public void loadGenomeCache() {
         logger.info("Loading VCF files into cache");
+        if(!ignite.cacheNames().contains("genomeCache")){
+            ignite.createCache("genomeCache");
+        }
         try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
+            dataStreamer.autoFlushFrequency(100);
             this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
                 try {
                     String path = entry.getValue();
@@ -152,6 +144,8 @@ public class DataLoader {
                 }
 
             });
+
+            logger.info("Done loading into genome cache");
         }
     }
 
@@ -163,15 +157,6 @@ public class DataLoader {
             vcfCodec.setVCFHeader((VCFHeader)featureCodecHeader.getHeaderValue(), vcfCodec.getVersion());
             return vcfCodec;
         }
-    }
-    private String getFirstPath(String path) throws IOException {
-        String firstPath;
-        if (fileSystemWrapper.isDirectory(path)) {
-            firstPath = fileSystemWrapper.firstFileInDirectory(path);
-        } else {
-            firstPath = path;
-        }
-        return firstPath;
     }
 
     private static InputStream bufferAndDecompressIfNecessary(final InputStream in)

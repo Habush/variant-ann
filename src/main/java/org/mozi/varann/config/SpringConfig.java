@@ -3,6 +3,8 @@ package org.mozi.varann.config;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.DataStorageConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
@@ -47,12 +49,20 @@ public class SpringConfig {
     @Scope("singleton")
     public Ignite igniteInstance(){
         IgniteConfiguration cfg = new IgniteConfiguration();
-        TcpDiscoverySpi spi = new TcpDiscoverySpi();
+
+        //TCP Discovery config
+        /*TcpDiscoverySpi spi = new TcpDiscoverySpi();
         TcpDiscoveryVmIpFinder tcpVmFinder = new TcpDiscoveryVmIpFinder();
         tcpVmFinder.setAddresses(Arrays.asList("46.4.115.181"));
         spi.setIpFinder(tcpVmFinder);
         spi.setJoinTimeout(30000);
-        cfg.setDiscoverySpi(spi);
+        cfg.setDiscoverySpi(spi);*/
+
+        //Cache Configuration
+        DataStorageConfiguration storageCfg = new DataStorageConfiguration();
+        storageCfg.setPageSize(128*1024);
+
+
         return Ignition.start(cfg);
     }
 
