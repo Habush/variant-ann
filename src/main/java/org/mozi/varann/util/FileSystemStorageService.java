@@ -17,6 +17,9 @@ import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * This class is a copy of the Spring boot tutorial for Storage file
+ */
 @Service
 public class FileSystemStorageService implements StorageService {
 
