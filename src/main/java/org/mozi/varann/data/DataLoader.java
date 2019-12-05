@@ -5,10 +5,13 @@ import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
 import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
 import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.tribble.FeatureCodecHeader;
 import htsjdk.tribble.readers.AsciiLineReader;
+import htsjdk.tribble.readers.AsciiLineReaderIterator;
 import htsjdk.tribble.readers.LineIteratorImpl;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 import lombok.Getter;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
@@ -19,10 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -57,13 +57,12 @@ public class DataLoader {
     }
 
     public void init() throws JannovarVarDBException, SerializationException {
-        logger.info("Loading Transcripts");
-        loadTranscripts();
-        ;
-        logger.info("Loading Reference DBs");
-        loadReferences();
         loadDbPath();
         loadGenomeCache();
+        logger.info("Loading Transcripts");
+        loadTranscripts();
+        logger.info("Loading Reference DBs");
+        loadReferences();
     }
 
     private void loadDbPath() {
@@ -132,7 +131,8 @@ public class DataLoader {
             for(Map.Entry<String, String> entry: this.dbPathMap.entrySet()){
                 try {
                     String path = entry.getValue();
-                    final VCFCodec vcfCodec = getVCFCodec(path);
+                    VCFCodec vcfCodec = getVCFCodec(path);
+                    vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
                     try (Stream<String> lines = Files.lines(Paths.get(path))) {
                         //filter out header files
                         logger.info("Loading " + entry.getKey() + "....");
@@ -156,15 +156,14 @@ public class DataLoader {
     }
 
     private VCFCodec getVCFCodec(String path) throws IOException {
-        try (SeekableStream headerIn =
-                     fileSystemWrapper.open(getFirstPath(path))) {
-            InputStream is = bufferAndDecompressIfNecessary(headerIn);
+        try (InputStream is = bufferAndDecompressIfNecessary(new FileInputStream(path));) {
+
             VCFCodec vcfCodec = new VCFCodec();
-            vcfCodec.readHeader(new LineIteratorImpl(AsciiLineReader.from(is)));
+            FeatureCodecHeader featureCodecHeader =  vcfCodec.readHeader(new LineIteratorImpl(AsciiLineReader.from(is)));
+            vcfCodec.setVCFHeader((VCFHeader)featureCodecHeader.getHeaderValue(), vcfCodec.getVersion());
             return vcfCodec;
         }
     }
-
     private String getFirstPath(String path) throws IOException {
         String firstPath;
         if (fileSystemWrapper.isDirectory(path)) {
