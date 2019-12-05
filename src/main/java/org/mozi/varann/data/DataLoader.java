@@ -22,7 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.print.DocFlavor;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -128,12 +131,14 @@ public class DataLoader {
     private void loadGenomeCache() {
         logger.info("Loading VCF files into cache");
         try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
-            for(Map.Entry<String, String> entry: this.dbPathMap.entrySet()){
+            this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
                 try {
                     String path = entry.getValue();
                     VCFCodec vcfCodec = getVCFCodec(path);
                     vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
-                    try (Stream<String> lines = Files.lines(Paths.get(path))) {
+                    try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
+                         BufferedReader bufReader = new BufferedReader(decoder);
+                         Stream<String> lines = bufReader.lines()) {
                         //filter out header files
                         logger.info("Loading " + entry.getKey() + "....");
                         List<VariantContext> vcs = lines.filter(line -> !line.startsWith("#"))
@@ -145,13 +150,8 @@ public class DataLoader {
                     logger.warn("Encountered IOException while reading " + entry.getKey());
                     ex.printStackTrace();
                 }
-            }
-/*
-            this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
-
 
             });
-*/
         }
     }
 
