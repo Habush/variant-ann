@@ -9,10 +9,18 @@
             <param name="ConversionPattern" value="%d{HH:mm:ss.SSS} [%t] %level - %m%n"/>
         </layout>
     </appender>
+    <appender name="file" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="target" value="System.out" />
+        <param name="file" value="/var/log/variant-ann"/>
+        <param name="threshold" value="info" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{MM/dd/yyyy hh:mm:ss a}|%-5p|%-30c{1}| %m%n"/>
+        </layout>
+    </appender>
     <root>
         <priority value="info" />
         <appender-ref ref="console" />
-<!--        <appender-ref ref="FILE" />-->
+        <appender-ref ref="file" />
 <!--        <appender-ref ref="FILE_PER_SIZE" />-->
 <!--        <appender-ref ref="FILE_PER_DAY" />-->
     </root>
