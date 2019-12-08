@@ -18,6 +18,12 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import lombok.RequiredArgsConstructor;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteCompute;
+import org.apache.ignite.cache.query.QueryCursor;
+import org.apache.ignite.cache.query.ScanQuery;
+import org.apache.ignite.lang.IgniteCallable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mozi.varann.data.DataLoader;
@@ -26,6 +32,7 @@ import org.mozi.varann.data.TranscriptDbRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.cache.Cache;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +49,7 @@ public class AnnotationHelper {
     private final DataLoader dataLoader;
     private final TranscriptDbRepository transcriptRepo;
     private final ReferenceRepository referenceRepo;
+    private final Ignite ignite;
 
     private static final Logger logger = LogManager.getLogger(AnnotationHelper.class);
 
@@ -100,7 +108,7 @@ public class AnnotationHelper {
             List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
 
             VariantContext resultVc = null;
-            for (DBVariantContextAnnotator driver: drivers) {
+            for (DBVariantContextAnnotator driver : drivers) {
                 resultVc = driver.annotateVariantContext(vc);
             }
 
@@ -115,21 +123,14 @@ public class AnnotationHelper {
     }
 
     public VariantContext annotateVariantById(String id, String[] dbs, String ref, String transcript) {
-        try {
+        try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
+             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.getID().equals(id)))
+        ) {
             JannovarData data = transcriptRepo.findById(transcript).get();
-            List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
-
-            VariantContext resultVc = null;
-            for (DBVariantContextAnnotator driver: drivers) {
-                resultVc = driver.annotateVariantContext(id);
-            }
-
             VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
-            resultVc = annotator.annotateVariantContext(resultVc);
-
-            return resultVc;
-        } catch (JannovarVarDBException e) {
-            e.printStackTrace();
+            if (cursor.iterator().hasNext()){
+                return annotator.annotateVariantContext(cursor.iterator().next().getValue());
+            }
         }
         return null;
 
@@ -139,7 +140,7 @@ public class AnnotationHelper {
      * This method annotates a vcf using the database specified
      *
      * @param file       - the uploaded vcf file
-     * @param dbs         - the databases selected for annotation
+     * @param dbs        - the databases selected for annotation
      * @param ref        - the reference database
      * @param transcript - the transcript database
      * @return - a vcf {@link File} that contains the annotated result
@@ -156,7 +157,7 @@ public class AnnotationHelper {
                 Stream<VariantContext> stream = vcfFileReader.iterator().stream();
                 List<DBVariantContextAnnotator> drivers = getAnnotationDriver(dbs, ref);
 
-                for(DBVariantContextAnnotator driver : drivers){
+                for (DBVariantContextAnnotator driver : drivers) {
                     driver.extendHeader(header);
                     stream = stream.map(driver::annotateVariantContext);
                 }

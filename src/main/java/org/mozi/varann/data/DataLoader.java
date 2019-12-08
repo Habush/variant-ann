@@ -118,6 +118,7 @@ public class DataLoader {
         if(!ignite.cacheNames().contains("genomeCache")){
             ignite.createCache("genomeCache");
         }
+        long startTime = System.currentTimeMillis(); //for debugging purposes
         try (IgniteDataStreamer<String, VariantContext> dataStreamer = ignite.dataStreamer("genomeCache")) {
             dataStreamer.autoFlushFrequency(1000);
             this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
@@ -144,8 +145,8 @@ public class DataLoader {
                 }
 
             });
-
-            logger.info("Done loading into genome cache");
+            long endTime = System.currentTimeMillis();
+            logger.info("Done loading into genome cache. It took " + (endTime - startTime)/1000 + " seconds");
         }
     }
 
