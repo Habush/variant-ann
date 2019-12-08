@@ -26,10 +26,10 @@
     Use this configuration file when running HTTP REST examples (see 'examples/rest' folder).
 
     When starting a standalone node, you need to execute the following command:
-    {IGNITE_HOME}/bin/ignite.{bat|sh} examples/config/example-cache.xml
+    {IGNITE_HOME}/bin/ignite.{bat|sh} examples/config/cache-config.xml
 
     When starting Ignite from Java IDE, pass path to this file to Ignition:
-    Ignition.start("examples/config/example-cache.xml");
+    Ignition.start("examples/config/cache-config.xml");
 -->
 <!--suppress SpringFacetInspection -->
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -38,17 +38,15 @@
         http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="ignite.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="pageSize" value="#{16*1024}"/>
+            </bean>
+        </property>
         <property name="peerClassLoadingEnabled" value="true"/>
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
                 <property name="ipFinder">
-                    <!--
-                        Ignite provides several options for automatic discovery that can be used
-                        instead os static IP based discovery. For information on all options refer
-                        to our documentation: http://apacheignite.readme.io/docs/cluster-config
-                    -->
-                    <!-- Uncomment static IP finder to enable static-based discovery of initial nodes. -->
-                    <!--<bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">-->
                     <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
                         <property name="addresses">
                             <list>
@@ -60,7 +58,7 @@
                     </bean>
                 </property>
                 <property name="networkTimeout" value="10000"/>
-<!--                <property name="joinTimeout" value="1000"/>-->
+                <property name="joinTimeout" value="30000"/>
             </bean>
         </property>
     </bean>

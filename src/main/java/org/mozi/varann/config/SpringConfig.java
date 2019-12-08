@@ -48,21 +48,7 @@ public class SpringConfig {
     @Bean(destroyMethod = "close")
     @Scope("singleton")
     public Ignite igniteInstance(){
-        IgniteConfiguration cfg = new IgniteConfiguration();
-
-        //TCP Discovery config
-        TcpDiscoverySpi spi = new TcpDiscoverySpi();
-        TcpDiscoveryVmIpFinder tcpVmFinder = new TcpDiscoveryVmIpFinder();
-        tcpVmFinder.setAddresses(Arrays.asList("46.4.115.181"));
-        spi.setIpFinder(tcpVmFinder);
-        spi.setJoinTimeout(30000);
-        cfg.setDiscoverySpi(spi);
-
-        //Cache Configuration
-        DataStorageConfiguration storageCfg = new DataStorageConfiguration();
-        storageCfg.setPageSize(16*1024);
-        cfg.setDataStorageConfiguration(storageCfg);
-        return Ignition.getOrStart(cfg);
+        return Ignition.start("src/main/resources/cache-config.xml");
     }
 
 
