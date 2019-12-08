@@ -51,12 +51,12 @@ public class SpringConfig {
         IgniteConfiguration cfg = new IgniteConfiguration();
 
         //TCP Discovery config
-        /*TcpDiscoverySpi spi = new TcpDiscoverySpi();
+        TcpDiscoverySpi spi = new TcpDiscoverySpi();
         TcpDiscoveryVmIpFinder tcpVmFinder = new TcpDiscoveryVmIpFinder();
         tcpVmFinder.setAddresses(Arrays.asList("46.4.115.181"));
         spi.setIpFinder(tcpVmFinder);
         spi.setJoinTimeout(30000);
-        cfg.setDiscoverySpi(spi);*/
+        cfg.setDiscoverySpi(spi);
 
         //Cache Configuration
         DataStorageConfiguration storageCfg = new DataStorageConfiguration();

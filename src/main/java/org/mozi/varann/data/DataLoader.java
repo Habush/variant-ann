@@ -14,17 +14,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -37,21 +34,22 @@ public class DataLoader {
 
     @Value("${basePath}")
     private String basePath;
-   /* private final Ignite ignite;
+    private final Ignite ignite;
     private final TranscriptDbRepository transcriptRepo;
-    private final ReferenceRepository refRepo;*/
+    private final ReferenceRepository refRepo;
 
     @Getter
     private HashMap<String, String> dbPathMap = new HashMap<>();
     private static Logger logger = LogManager.getLogger(DataLoader.class);
 
     public void init() throws JannovarVarDBException, SerializationException {
+        logger.info("Loading Genome Cache");
         loadDbPath();
         loadGenomeCache();
-        /*logger.info("Loading Transcripts");
+        logger.info("Loading Transcripts");
         loadTranscripts();
         logger.info("Loading Reference DBs");
-        loadReferences();*/
+        loadReferences();
     }
 
     public void loadDbPath() {
@@ -79,7 +77,7 @@ public class DataLoader {
 
     }
 
-   /* public void loadTranscripts() throws SerializationException {
+    public void loadTranscripts() throws SerializationException {
         File[] transFiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".ser"));
 
         assert transFiles != null;
@@ -109,35 +107,38 @@ public class DataLoader {
 
             refRepo.save(name, new AlleleMatcher(file.getPath()));
         }
-    }*/
+    }
 
     /**
      * This method patch loads {@link htsjdk.variant.variantcontext.VariantContext}s from vcf files and puts them in to an
      * {@link org.apache.ignite.IgniteCache}
      */
     public void loadGenomeCache() {
-        /*logger.info("Loading VCF files into cache");
+        logger.info("Loading VCF files into cache");
         if(!ignite.cacheNames().contains("genomeCache")){
             ignite.createCache("genomeCache");
         }
-        try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
-            dataStreamer.autoFlushFrequency(100);
+        try (IgniteDataStreamer<String, VariantContext> dataStreamer = ignite.dataStreamer("genomeCache")) {
+            dataStreamer.autoFlushFrequency(1000);
             this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
+                String line = "";
                 try {
                     String path = entry.getValue();
                     VCFCodec vcfCodec = getVCFCodec(path);
                     vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
                     try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
-                         BufferedReader bufReader = new BufferedReader(decoder);
-                         Stream<String> lines = bufReader.lines()) {
-                        //filter out header files
+                         BufferedReader bufReader = new BufferedReader(decoder);) {
                         logger.info("Loading " + entry.getKey() + "....");
-                        List<VariantContext> vcs = lines.filter(line -> !line.startsWith("#"))
-                                .map(vcfCodec::decode).collect(Collectors.toList());
-                        dataStreamer.addData(entry.getKey(), vcs);
+                        while((line = bufReader.readLine()) != null){
+                            if(line.startsWith("#")) continue;
+                            dataStreamer.addData(entry.getKey(), vcfCodec.decode(line));
+                        }
+                        logger.info("Finished Loading " + entry.getKey());
+
 
                     }
                 } catch (IOException ex) {
+                    logger.error("Line causing exception " + line);
                     logger.warn("Encountered IOException while reading " + entry.getKey());
                     ex.printStackTrace();
                 }
@@ -145,27 +146,7 @@ public class DataLoader {
             });
 
             logger.info("Done loading into genome cache");
-        }*/
-        this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
-            try {
-                String path = entry.getValue();
-                VCFCodec vcfCodec = getVCFCodec(path);
-                vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
-                try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
-                     BufferedReader bufReader = new BufferedReader(decoder);
-                     Stream<String> lines = bufReader.lines()) {
-                    //filter out header files
-                    logger.info("Loading " + entry.getKey() + "....");
-                    List<VariantContext> vcs = lines.filter(line -> !line.startsWith("#"))
-                            .map(vcfCodec::decode).collect(Collectors.toList());
-                    logger.info("Finished loading " + vcs.size() + " variants!!");
-                }
-            } catch (IOException ex) {
-                logger.warn("Encountered IOException while reading " + entry.getKey());
-                ex.printStackTrace();
-            }
-
-        });
+        }
     }
 
     private VCFCodec getVCFCodec(String path) throws IOException {
