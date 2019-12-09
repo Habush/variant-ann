@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.xml.ws.Response;
 import java.io.File;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,9 +28,10 @@ public class AnnotationController {
                            @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript, @RequestParam(value = "variant") String variant){
         return annotationHelper.annotateVariant(variant, dbs, ref, transcript).toString();
     }
-    @RequestMapping(value = "/annotate/{id}", method = RequestMethod.GET)
-    public String annotateById(@RequestParam(value = "dbs", defaultValue="1k") String[] dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
-                           @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript,  @PathVariable String id){
+    @RequestMapping(value = "/annotate/{id}", method = RequestMethod.GET, produces = "text/plain")
+    @ResponseBody
+    public String annotateById(@RequestParam(value = "dbs", defaultValue="1k") List<String> dbs, @RequestParam(value = "ref", defaultValue = "hg38") String ref,
+                               @RequestParam(value = "trans", defaultValue = "hg38_ensembl") String transcript, @PathVariable String id){
         return annotationHelper.annotateVariantById(id, dbs, ref, transcript).toString();
     }
 

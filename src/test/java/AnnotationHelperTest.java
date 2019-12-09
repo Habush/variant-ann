@@ -25,6 +25,7 @@ import org.mozi.varann.data.TranscriptDbRepository;
 import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 import javax.cache.Cache;
+import java.util.ArrayList;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,12 +62,13 @@ public class AnnotationHelperTest {
     public void annotateByIdTest(){
         dataLoader.loadDbPath();
         dataLoader.loadGenomeCache();
-        try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
-             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.getID().equals("rs6054257")))
+        try (IgniteCache<String, List<VariantContext>> cache = ignite.getOrCreateCache("genomeCache");
+             QueryCursor<Cache.Entry<String, List<VariantContext>>> cursor = cache.query(new ScanQuery<>((k, p) -> k.equals("test") && p.stream().anyMatch(v -> v.getID().equals("rs6040355"))))
         ) {
-           List<Cache.Entry<String, VariantContext>> result = cursor.getAll();
+           List<Cache.Entry<String, List<VariantContext>>> result = cursor.getAll();
            assertThat(result.size()).isGreaterThan(0);
-           System.out.println(result.get(0).getValue());
+          /* System.out.println("Sample VCF");
+           System.out.println(result.get(0).getValue().get(0).toString());*/
         }
     }
 }

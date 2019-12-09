@@ -21,7 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -119,7 +121,7 @@ public class DataLoader {
             ignite.createCache("genomeCache");
         }
         long startTime = System.currentTimeMillis(); //for debugging purposes
-        try (IgniteDataStreamer<String, VariantContext> dataStreamer = ignite.dataStreamer("genomeCache")) {
+        try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
             dataStreamer.autoFlushFrequency(1000);
             this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
                 String line = "";
@@ -128,19 +130,15 @@ public class DataLoader {
                     String path = entry.getValue();
                     VCFCodec vcfCodec = getVCFCodec(path);
                     vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
-                    VariantContext vc = null;
+                    List<VariantContext> vcs = new ArrayList<>();
                     try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
                          BufferedReader bufReader = new BufferedReader(decoder);) {
                         logger.info("Loading " + entry.getKey() + "....");
                         while((line = bufReader.readLine()) != null){
                             if(line.startsWith("#")) continue;
-                            vc = vcfCodec.decode(line);
-                            if((i % 100000) == 0){
-                                logger.info("Current id " + vc.getID());
-                            }
-                            dataStreamer.addData(entry.getKey(), vc);
-                            i++;
+                            vcs.add(vcfCodec.decode(line));
                         }
+                        dataStreamer.addData(entry.getKey(), vcs);
                         logger.info("Finished Loading " + entry.getKey());
 
 

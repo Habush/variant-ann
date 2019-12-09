@@ -23,6 +23,7 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteCompute;
 import org.apache.ignite.cache.query.QueryCursor;
 import org.apache.ignite.cache.query.ScanQuery;
+import org.apache.ignite.lang.IgniteBiPredicate;
 import org.apache.ignite.lang.IgniteCallable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -123,14 +124,13 @@ public class AnnotationHelper {
         return null;
     }
 
-    public VariantContext annotateVariantById(String id, String[] dbs, String ref, String transcript) {
-        try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
-             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.hasID() && p.getID().contains(id)))
-        ) {
-            for(Cache.Entry<String, VariantContext> entry : cursor){
+    public VariantContext annotateVariantById(String id, List<String> dbs, String ref, String transcript) {
+        try (IgniteCache<String, List<VariantContext>> cache = ignite.getOrCreateCache("genomeCache");
+             QueryCursor<Cache.Entry<String, List<VariantContext>>> cursor = cache.query(new ScanQuery<>((k, p) -> dbs.contains(k) && p.stream().anyMatch(v -> v.getID().equals(id))))) {
+            for(Cache.Entry<String, List<VariantContext>> entry : cursor){
                 JannovarData data = transcriptRepo.findById(transcript).get();
                 VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
-                return annotator.annotateVariantContext(entry.getValue());
+                return annotator.annotateVariantContext(entry.getValue().get(0));
             }
             throw new AnnotationException("Variant with id " + id + " was not found");
         }
