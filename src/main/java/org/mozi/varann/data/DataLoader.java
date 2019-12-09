@@ -115,7 +115,7 @@ public class DataLoader {
      */
     public void loadGenomeCache() {
         logger.info("Loading VCF files into cache");
-        if(!ignite.cacheNames().contains("genomeCache")){
+        if(!ignite.cacheNames().contains("genomeCache")) {
             ignite.createCache("genomeCache");
         }
         long startTime = System.currentTimeMillis(); //for debugging purposes
@@ -124,15 +124,22 @@ public class DataLoader {
             this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
                 String line = "";
                 try {
+                    long i = 0;
                     String path = entry.getValue();
                     VCFCodec vcfCodec = getVCFCodec(path);
                     vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
+                    VariantContext vc = null;
                     try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
                          BufferedReader bufReader = new BufferedReader(decoder);) {
                         logger.info("Loading " + entry.getKey() + "....");
                         while((line = bufReader.readLine()) != null){
                             if(line.startsWith("#")) continue;
-                            dataStreamer.addData(entry.getKey(), vcfCodec.decode(line));
+                            vc = vcfCodec.decode(line);
+                            if((i % 100000) == 0){
+                                logger.info("Current id " + vc.getID());
+                            }
+                            dataStreamer.addData(entry.getKey(), vc);
+                            i++;
                         }
                         logger.info("Finished Loading " + entry.getKey());
 

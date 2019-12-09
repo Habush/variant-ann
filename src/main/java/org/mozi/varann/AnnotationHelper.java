@@ -125,15 +125,14 @@ public class AnnotationHelper {
 
     public VariantContext annotateVariantById(String id, String[] dbs, String ref, String transcript) {
         try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
-             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.getID().equals(id)))
+             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.hasID() && p.getID().contains(id)))
         ) {
-            if (cursor.iterator().hasNext()) {
+            for(Cache.Entry<String, VariantContext> entry : cursor){
                 JannovarData data = transcriptRepo.findById(transcript).get();
                 VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
-                return annotator.annotateVariantContext(cursor.iterator().next().getValue());
-            } else {
-                throw new AnnotationException("Variant with id " + id + " found");
+                return annotator.annotateVariantContext(entry.getValue());
             }
+            throw new AnnotationException("Variant with id " + id + " was not found");
         }
     }
 
