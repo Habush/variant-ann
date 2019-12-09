@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.mozi.varann.data.DataLoader;
 import org.mozi.varann.data.ReferenceRepository;
 import org.mozi.varann.data.TranscriptDbRepository;
+import org.mozi.varann.util.AnnotationException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -126,14 +127,14 @@ public class AnnotationHelper {
         try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
              QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.getID().equals(id)))
         ) {
-            JannovarData data = transcriptRepo.findById(transcript).get();
-            VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
-            if (cursor.iterator().hasNext()){
+            if (cursor.iterator().hasNext()) {
+                JannovarData data = transcriptRepo.findById(transcript).get();
+                VariantContextAnnotator annotator = new VariantContextAnnotator(data.getRefDict(), data.getChromosomes());
                 return annotator.annotateVariantContext(cursor.iterator().next().getValue());
+            } else {
+                throw new AnnotationException("Variant with id " + id + " found");
             }
         }
-        return null;
-
     }
 
     /**

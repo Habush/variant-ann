@@ -1,8 +1,11 @@
-package org.mozi.varann;
-
+import de.charite.compbio.jannovar.data.JannovarData;
+import de.charite.compbio.jannovar.htsjdk.VariantContextAnnotator;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.cache.query.QueryCursor;
+import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,19 +15,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mozi.varann.AnnotationHelper;
 import org.mozi.varann.data.DataLoader;
 import org.mozi.varann.data.GenomeDbRepository;
 import org.mozi.varann.data.ReferenceRepository;
 import org.mozi.varann.data.TranscriptDbRepository;
 import org.springframework.test.util.ReflectionTestUtils;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import javax.cache.Cache;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(MockitoExtension.class)
-public class DataLoaderTest {
+public class AnnotationHelperTest {
 
     private static final Logger logger = LogManager.getLogger("test-logger");
     @Mock
@@ -54,19 +58,15 @@ public class DataLoaderTest {
     }
 
     @Test
-    public void testDbMapInit() {
-        dataLoader.loadDbPath();
-        assertThat(dataLoader.getDbPathMap()).size().isGreaterThan(0);
-    }
-
-    @Test
-    public void testDataCacheLoad(){
+    public void annotateByIdTest(){
         dataLoader.loadDbPath();
         dataLoader.loadGenomeCache();
-        List<VariantContext> vcs = (List< VariantContext>) ignite.getOrCreateCache("genomeCache").get("test");
-        assertThat(vcs).size().isGreaterThan(1);
-        logger.info("VC: " +  vcs.get(0).getID());
-
+        try (IgniteCache<String, VariantContext> cache = ignite.getOrCreateCache("genomeCache");
+             QueryCursor<Cache.Entry<String, VariantContext>> cursor = cache.query(new ScanQuery<>((k, p) -> p.getID().equals("rs6054257")))
+        ) {
+           List<Cache.Entry<String, VariantContext>> result = cursor.getAll();
+           assertThat(result.size()).isGreaterThan(0);
+           System.out.println(result.get(0).getValue());
+        }
     }
-
 }
