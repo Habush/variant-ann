@@ -1,33 +1,32 @@
 package org.mozi.varann.config;
 
 
-import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.DataStorageConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
-import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
-import org.apache.ignite.springdata20.repository.config.EnableIgniteRepositories;
-import org.mozi.varann.data.fs.FileSystemWrapper;
-import org.mozi.varann.data.fs.NioFileSystemWrapper;
+import de.charite.compbio.jannovar.JannovarException;
+import de.charite.compbio.jannovar.data.JannovarData;
+import de.charite.compbio.jannovar.data.JannovarDataSerializer;
+import de.charite.compbio.jannovar.data.ReferenceDictionary;
+import de.charite.compbio.jannovar.impl.util.PathUtil;
+import org.apache.http.HttpHost;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
-
-import javax.annotation.PostConstruct;
-import java.util.Arrays;
 
 /**
  * The bean configuration to get Ignite instance
  */
 
 @Configuration
-@EnableIgniteRepositories(basePackages = "org.mozi.varann.data")
 public class SpringConfig {
+
+    private static final Logger logger = LogManager.getLogger(SpringConfig.class);
 
     @Bean
     public static PropertyPlaceholderConfigurer properties() {
@@ -40,29 +39,19 @@ public class SpringConfig {
         return ppc;
     }
 
-    @Bean
-    public FileSystemWrapper fileSystemWrapper() {
-        return new NioFileSystemWrapper();
+    @Bean(destroyMethod = "close")
+    public RestHighLevelClient elasticClient() {
+        RestClientBuilder clientBuilder = RestClient.builder(new HttpHost("localhost", 9200, "http"));
+        return new RestHighLevelClient(clientBuilder);
     }
 
-    @Bean(destroyMethod = "close")
+    @Bean
     @Scope("singleton")
-    public Ignite igniteInstance(){
-        IgniteConfiguration cfg = new IgniteConfiguration();
-
-        //TCP Discovery config
-        /*TcpDiscoverySpi spi = new TcpDiscoverySpi();
-        TcpDiscoveryVmIpFinder tcpVmFinder = new TcpDiscoveryVmIpFinder();
-        tcpVmFinder.setAddresses(Arrays.asList("46.4.115.181"));
-        spi.setIpFinder(tcpVmFinder);
-        spi.setJoinTimeout(30000);
-        cfg.setDiscoverySpi(spi);*/
-
-        //Cache Configuration
-        DataStorageConfiguration storageCfg = new DataStorageConfiguration();
-        storageCfg.setPageSize(16*1024);
-        cfg.setDataStorageConfiguration(storageCfg);
-        return Ignition.getOrStart(cfg);
+    public ReferenceDictionary referenceDict(@Value("${basePath}") String basePath) throws JannovarException {
+        logger.info("Loading reference dictionary...");
+        JannovarData data = new JannovarDataSerializer(PathUtil.join(basePath, "refs", "hg19_ensembl.ser")).load();
+        logger.info("Reference dictionary loaded.");
+        return data.getRefDict();
     }
 
 

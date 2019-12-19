@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "alt": {
+      "type": "keyword"
+    },
+    "chrom": {
+      "type": "keyword"
+    },
+    "hgvs": {
+      "type": "keyword"
+    },
+    "pos": {
+      "type": "long"
+    },
+    "ref": {
+      "type": "keyword"
+
+    },
+    "rsId": {
+      "type": "keyword"
+    }
+  }
+}

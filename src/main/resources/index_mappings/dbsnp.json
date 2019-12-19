@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "alt": {
+      "type": "keyword"
+    },
+    "chrom": {
+      "type": "keyword"
+    },
+    "genes": {
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "symbol": {
+          "type": "keyword"
+        }
+      }
+    },
+    "id": {
+      "type": "keyword"
+    },
+    "origin": {
+      "type": "text"
+    },
+    "pos": {
+      "type": "long"
+    },
+    "ref": {
+      "type": "keyword"
+    },
+    "rsId": {
+      "type": "keyword"
+    },
+    "rsPos": {
+      "type": "long"
+    },
+    "hgvs": {
+      "type": "keyword"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "properties": {
+    "alt": {
+      "type": "keyword",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "chrom": {
+      "type": "keyword",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    },
+    "hgvs": {
+      "type": "keyword"
+    },
+    "pos": {
+      "type": "long"
+    },
+    "ref": {
+      "type": "keyword"
+    },
+    "rsId": {
+      "type": "keyword"
+    }
+  }
+}

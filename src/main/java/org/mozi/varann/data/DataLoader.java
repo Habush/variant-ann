@@ -1,170 +1,197 @@
 package org.mozi.varann.data;
 
-import de.charite.compbio.jannovar.data.SerializationException;
-import de.charite.compbio.jannovar.vardbs.base.AlleleMatcher;
-import de.charite.compbio.jannovar.vardbs.base.JannovarVarDBException;
-import htsjdk.samtools.util.IOUtil;
-import htsjdk.tribble.FeatureCodecHeader;
-import htsjdk.tribble.readers.AsciiLineReader;
-import htsjdk.tribble.readers.LineIteratorImpl;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import de.charite.compbio.jannovar.data.ReferenceDictionary;
+import de.charite.compbio.jannovar.impl.util.PathUtil;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import lombok.Getter;
+import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteDataStreamer;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.common.io.PathUtils;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
+import org.mozi.varann.data.records.VariantEffectRecord;
+import org.mozi.varann.data.records.ClinVarRecord;
+import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
+import org.mozi.varann.data.records.DBSNPRecord;
+import org.mozi.varann.data.impl.dbsnp.DBSNPVariantContextToRecordConverter;
+import org.mozi.varann.data.records.ExacRecord;
+import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
+import org.mozi.varann.data.records.ThousandGenomesRecord;
+import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
- * author: Abdulrahman Semrie
+ * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
+ * 12/18/19
+ * Loads the genome data to mongodb and elasticsearch
  */
 
 @Service
 @RequiredArgsConstructor
 public class DataLoader {
 
+    private static final Logger logger = LogManager.getLogger(DataLoader.class);
+    private final ReferenceDictionary referenceDictionary;
+
+    private final RestHighLevelClient client;
+
+    private final Datastore datastore;
+
     @Value("${basePath}")
     private String basePath;
-    private final Ignite ignite;
-    private final TranscriptDbRepository transcriptRepo;
-    private final ReferenceRepository refRepo;
 
-    @Getter
-    private HashMap<String, String> dbPathMap = new HashMap<>();
-    private static Logger logger = LogManager.getLogger(DataLoader.class);
+    @Value("${prod}")
+    private boolean prod;
 
-    public void init() throws JannovarVarDBException, SerializationException {
-        loadDbPath();
-        loadGenomeCache();
-        logger.info("Loading Transcripts");
-        loadTranscripts();
-        logger.info("Loading Reference DBs");
-        loadReferences();
+    /**
+     * Elasticsearch indices
+     *
+     */
+    @Value("${indices}")
+    private String[] indices;
+
+
+    public void initData() throws IOException {
+        checkIndices();
+        logger.info("Loading records");
+        addClinvarRecords();
+        addDBSNPRecords();
+        addExacRecords();
+        addG1kRecords();
+        addVarEffectRecords();
     }
 
-    public void loadDbPath() {
-        logger.info("Getting the annotation db paths");
-        File[] vcfiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".vcf.gz"));
-        assert vcfiles != null && vcfiles.length > 0;
 
-        for (File file : vcfiles) {
-            String name = file.getName();
-            if (name.contains("1000GENOME")) {
-                dbPathMap.put("1k", file.getAbsolutePath());
-            } else if (name.contains("clinvar")) {
-                dbPathMap.put("clinvar", file.getAbsolutePath());
-            } else if (name.contains("dbSNP")) {
-                dbPathMap.put("dbsnp", file.getAbsolutePath());
-            } else if (name.contains("cosmic")) {
-                dbPathMap.put("cosmic", file.getAbsolutePath());
-            } else if (name.contains("exac")) {
-                dbPathMap.put("exac", file.getAbsolutePath());
-            } else {
-                logger.info("Putting in " + name + " in the table");
-                dbPathMap.put(name.split("\\.")[0], file.getAbsolutePath());
+    private void addClinvarRecords() throws IOException {
+        Query<ClinVarRecord> query = datastore.createQuery(ClinVarRecord.class);
+        if (query.count() == 0) {
+            logger.info("Adding Clinvar Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "clinvar.vcf.gz") : PathUtil.join(basePath, "vcfs", "clinvar_sample.vcf");
+            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);
+                 BufferedReader reader = new BufferedReader(new FileReader(PathUtil.join(basePath, "vcfs", "var_citations.txt"))
+                )) {
+                Multimap<String, String> pubMap = ArrayListMultimap.create();
+                reader.lines().forEach(s -> {
+                    String[] cols = s.split("\\t");
+                    pubMap.put(cols[0], cols[5]);
+                });
+                ClinVarVariantContextToRecordConverter recordConverter = new ClinVarVariantContextToRecordConverter();
+                ClinVarRecord record = null;
+                for (VariantContext variantContext : fileReader) {
+                    record = recordConverter.convert(variantContext, referenceDictionary);
+                    record.setPubmeds(pubMap.get(record.getAlleleId()));
+                    datastore.save(record);
+                }
             }
         }
-
     }
 
-    public void loadTranscripts() throws SerializationException {
-        File[] transFiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".ser"));
-
-        assert transFiles != null;
-        assert transFiles.length > 0;
-        for (File file : transFiles) {
-            logger.info("Loading transcript file " + file.getName());
-            String name = file.getName().split("\\.")[0];
-            transcriptRepo.save(name, DataReader.readSerializedObj(file.getPath()));
-        }
-    }
-
-    public void loadReferences() throws JannovarVarDBException {
-        File[] fastFiles = new File(basePath).listFiles((dir, name) -> name.endsWith(".fa"));
-
-        assert fastFiles != null;
-        for (File file : fastFiles) {
-            logger.info("Loading fasta file " + file.getName());
-            String name = null;
-            if (file.getName().matches("(.*)(h38)(.*)*")) {
-                name = "hg38";
-            } else if (file.getName().matches("(.*)(h19)(.*)*")) {
-                name = "hg19";
-            } else if (file.getName().matches("(.*)(h37)(.*)*")) {
-                name = "hg37";
+    private void addDBSNPRecords() throws IOException {
+        Query<DBSNPRecord> query = datastore.createQuery(DBSNPRecord.class);
+        if (query.count() == 0) {
+            logger.info("Addig DBSNP Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "dbsnp.vcf.gz") : PathUtil.join(basePath, "vcfs", "dbsnp_sample.vcf");
+            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
+                DBSNPVariantContextToRecordConverter recordConverter = new DBSNPVariantContextToRecordConverter();
+                for (VariantContext variantContext : fileReader) {
+                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
+                }
             }
-            assert name != null;
-
-            refRepo.save(name, new AlleleMatcher(file.getPath()));
         }
+    }
+
+    private void addExacRecords() throws IOException {
+        Query<ExacRecord> query = datastore.createQuery(ExacRecord.class);
+        if (query.count() == 0) {
+            logger.info("Adding Exac Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "exac.vcf.gz") : PathUtil.join(basePath, "vcfs", "exac_sample.vcf");
+            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
+                ExacVariantContextToRecordConverter recordConverter = new ExacVariantContextToRecordConverter();
+                for (VariantContext variantContext : fileReader) {
+                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
+                }
+            }
+        }
+    }
+
+
+    private void addVarEffectRecords() {
+        Query<VariantEffectRecord> query = datastore.createQuery(VariantEffectRecord.class);
+        if (query.count() == 0) {
+            logger.info("Adding Variant Effect Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "var_effect.vcf.gz") : PathUtil.join(basePath, "vcfs", "var_effect_sample_ensembl.vcf");
+            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
+                VariantContextToEffectRecordConverter recordConverter = new VariantContextToEffectRecordConverter();
+                for (VariantContext variantContext : fileReader) {
+                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
+                }
+            }
+        }
+    }
+
+    private void addG1kRecords() {
+        Query<ThousandGenomesRecord> query = datastore.createQuery(ThousandGenomesRecord.class);
+        if (query.count() == 0) {
+            logger.info("Adding 1000 Genome Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "1k.vcf.gz") : PathUtil.join(basePath, "vcfs", "1k_sample.vcf");
+            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
+                ThousandGenomesVariantContextToRecordConverter recordConverter = new ThousandGenomesVariantContextToRecordConverter();
+                for (VariantContext variantContext : fileReader) {
+                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
+                }
+            }
+        }
+    }
+
+
+    /**
+     * This method checks if an index exists and creates it if it doesn't
+     *
+     */
+    private void checkIndices() throws IOException {
+        for (int i = 0; i < indices.length; i++) {
+            GetIndexRequest getIndexRequest = new GetIndexRequest(indices[i]);
+            getIndexRequest.local(false);
+            getIndexRequest.includeDefaults(true);
+            boolean exists = client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
+            if (!exists) {
+                logger.warn("The " + indices[i] + " index doesn't exist. Attempting to create it...");
+                createIndex(indices[i], client);
+            }
+
+        }
+
     }
 
     /**
-     * This method patch loads {@link htsjdk.variant.variantcontext.VariantContext}s from vcf files and puts them in to an
-     * {@link org.apache.ignite.IgniteCache}
+     * Sends {@link CreateIndexRequest} to {@link RestHighLevelClient}
+     *
+     * @param index  - the index to be created
+     * @param client - the ElasticSearch client
+     * @throws IOException
      */
-    public void loadGenomeCache() {
-        logger.info("Loading VCF files into cache");
-        if(!ignite.cacheNames().contains("genomeCache")){
-            ignite.createCache("genomeCache");
-        }
-        try (IgniteDataStreamer<String, List<VariantContext>> dataStreamer = ignite.dataStreamer("genomeCache")) {
-            dataStreamer.autoFlushFrequency(100);
-            this.dbPathMap.entrySet().parallelStream().forEach(entry -> {
-                try {
-                    String path = entry.getValue();
-                    VCFCodec vcfCodec = getVCFCodec(path);
-                    vcfCodec.setVCFHeader(vcfCodec.getHeader(), vcfCodec.getVersion());
-                    try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(path)), StandardCharsets.ISO_8859_1);
-                         BufferedReader bufReader = new BufferedReader(decoder);
-                         Stream<String> lines = bufReader.lines()) {
-                        //filter out header files
-                        logger.info("Loading " + entry.getKey() + "....");
-                        List<VariantContext> vcs = lines.filter(line -> !line.startsWith("#"))
-                                .map(vcfCodec::decode).collect(Collectors.toList());
-                        dataStreamer.addData(entry.getKey(), vcs);
-
-                    }
-                } catch (IOException ex) {
-                    logger.warn("Encountered IOException while reading " + entry.getKey());
-                    ex.printStackTrace();
-                }
-
-            });
-
-            logger.info("Done loading into genome cache");
-        }
+    private void createIndex(String index, RestHighLevelClient client) throws IOException {
+        CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+        String jsonMapping = FileUtils.readFileToString(FileUtils.getFile("src/main/resources/index_mappings", index + ".json"), "utf8");
+        indexRequest.mapping(jsonMapping, XContentType.JSON);
+        var response = client.indices().create(indexRequest, RequestOptions.DEFAULT);
+        logger.info("Created " + response.index() + " index");
     }
-
-    private VCFCodec getVCFCodec(String path) throws IOException {
-        try (InputStream is = bufferAndDecompressIfNecessary(new FileInputStream(path));) {
-
-            VCFCodec vcfCodec = new VCFCodec();
-            FeatureCodecHeader featureCodecHeader =  vcfCodec.readHeader(new LineIteratorImpl(AsciiLineReader.from(is)));
-            vcfCodec.setVCFHeader((VCFHeader)featureCodecHeader.getHeaderValue(), vcfCodec.getVersion());
-            return vcfCodec;
-        }
-    }
-
-    private static InputStream bufferAndDecompressIfNecessary(final InputStream in)
-            throws IOException {
-        BufferedInputStream bis = new BufferedInputStream(in);
-        // despite the name, SamStreams.isGzippedSAMFile looks for any gzipped stream (including block
-        // compressed)
-        return IOUtil.isGZIPInputStream(bis) ? new GZIPInputStream(bis) : bis;
-    }
-
 
 }
