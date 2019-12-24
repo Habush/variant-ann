@@ -1,7 +1,7 @@
 package org.mozi.varann.web;
 
 import lombok.RequiredArgsConstructor;
-import org.mozi.varann.data.VariantInfo;
+import org.mozi.varann.web.data.VariantInfo;
 import org.mozi.varann.util.AnnotationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;

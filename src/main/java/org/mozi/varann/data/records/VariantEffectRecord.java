@@ -1,5 +1,7 @@
 package org.mozi.varann.data.records;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
@@ -7,10 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Entity("effect")
 @Data
@@ -61,14 +60,14 @@ public class VariantEffectRecord {
     /**
      * Annotation for the variant
      */
-    private Map<String, List<AnnotationRecord>> annotation  = new HashMap<>();
+    private HashMap<String, Collection<AnnotationRecord>> annotation;
 
     /**
      * Hgvs string for each allele of the variant
      */
     @JsonIgnore
-    private List<String> hgvs = new ArrayList<>();
+    private List<String> hgvs = new ArrayList<>() ;
 
-    private List<String> hgvsNomination = new ArrayList<>();
+    private HashMap<String, Collection<String>> hgvsNomination;
 
 }

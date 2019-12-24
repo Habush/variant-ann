@@ -11,6 +11,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -63,12 +64,13 @@ public class DataLoader {
 
     /**
      * Elasticsearch indices
-     *
      */
     @Value("${indices}")
     private String[] indices;
 
-
+    private static final String[] chrs = {
+           "X", "Y", "M"
+    };
     public void initData() throws IOException {
         checkIndices();
         logger.info("Loading records");
@@ -88,7 +90,7 @@ public class DataLoader {
             String fileName = prod ? PathUtil.join(basePath, "vcfs", "clinvar.vcf.gz") : PathUtil.join(basePath, "vcfs", "clinvar_sample.vcf");
             try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);
                  BufferedReader reader = new BufferedReader(new FileReader(PathUtil.join(basePath, "vcfs", "var_citations.txt"))
-                )) {
+                 )) {
                 Multimap<String, String> pubMap = ArrayListMultimap.create();
                 reader.lines().forEach(s -> {
                     String[] cols = s.split("\\t");
@@ -162,44 +164,62 @@ public class DataLoader {
         }
     }
 
-    private void addDBNSFPRecords() throws IOException{
+    private void addDBNSFPRecords() throws IOException {
         Query<DBNSFPRecord> query = datastore.createQuery(DBNSFPRecord.class);
-        if(query.count() == 0){
+        if (query.count() == 0) {
             logger.info("Adding DBNSFP Records...");
-            String fileName = prod ? PathUtil.join(basePath, "vcfs", "dbNSFP.tsv") : PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv");
-            try(BufferedReader reader = Files.newBufferedReader(Paths.get(fileName));
-                CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
-                DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
-                DBNSFPRecord dbsnpRecord = null;
-                for(CSVRecord csvRecord : parser.getRecords()){
-                    DBNSFPRecord record = converter.convert(csvRecord, referenceDictionary);
-                    if(dbsnpRecord != null && record.getChrom().equals(dbsnpRecord.getChrom())
-                            && record.getRef().equals(dbsnpRecord.getRef()) && record.getPos() == dbsnpRecord.getPos()){
-                        //If it is the same variant with d/t allele just update the scores
-                        dbsnpRecord.copy(record);
-                        query = datastore.createQuery(DBNSFPRecord.class).field("_id").equal(dbsnpRecord.get_id());
-                        UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
-                                .set("alt", dbsnpRecord.getAlt()).set("hgvs", dbsnpRecord.getHgvs())
-                                .set("sift", dbsnpRecord.getSift())
-                                .set("cadd", dbsnpRecord.getCadd()).set("polyphen2", dbsnpRecord.getPolyphen2())
-                                .set("lrt", dbsnpRecord.getLrt()).set("mutationTaster", dbsnpRecord.getMutationTaster())
-                                .set("dann", dbsnpRecord.getMutationTaster()).set("vest4", dbsnpRecord.getVest4());
-
-                         datastore.update(query, updateOp);
-                    } else {
-                        dbsnpRecord = record;
-                        datastore.save(dbsnpRecord);
-                    }
+            if(prod){
+                //Add from chr1-22
+                for(int i = 1; i < 23; i++){
+                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", i));
+                    addDBNSFPRecord(filename, query);
                 }
+                //Add chr X, Y, M
+                for(String chr : chrs) {
+                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", chr));
+                    addDBNSFPRecord(filename, query);
+                }
+            }
+            else {
+                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv"), query);
             }
         }
 
     }
 
+    private void addDBNSFPRecord(String fileName, Query<DBNSFPRecord> query) throws IOException {
+        try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(fileName)));
+             BufferedReader reader = new BufferedReader(decoder);
+             CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
+
+            DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
+            DBNSFPRecord dbsnpRecord = null;
+            for (CSVRecord csvRecord : parser.getRecords()) {
+                DBNSFPRecord record = converter.convert(csvRecord, referenceDictionary);
+                if (dbsnpRecord != null && record.getChrom().equals(dbsnpRecord.getChrom())
+                        && record.getRef().equals(dbsnpRecord.getRef()) && record.getPos() == dbsnpRecord.getPos()) {
+                    //If it is the same variant with d/t allele just update the scores
+                    dbsnpRecord.copy(record);
+                    query = datastore.createQuery(DBNSFPRecord.class).field("_id").equal(dbsnpRecord.get_id());
+                    UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
+                            .set("alt", dbsnpRecord.getAlt()).set("hgvs", dbsnpRecord.getHgvs())
+                            .set("sift", dbsnpRecord.getSift())
+                            .set("cadd", dbsnpRecord.getCadd()).set("polyphen2", dbsnpRecord.getPolyphen2())
+                            .set("lrt", dbsnpRecord.getLrt()).set("mutationTaster", dbsnpRecord.getMutationTaster())
+                            .set("dann", dbsnpRecord.getMutationTaster()).set("vest4", dbsnpRecord.getVest4());
+
+                    datastore.update(query, updateOp);
+                } else {
+                    dbsnpRecord = record;
+                    datastore.save(dbsnpRecord);
+                }
+            }
+        }
+    }
+
 
     /**
      * This method checks if an index exists and creates it if it doesn't
-     *
      */
     private void checkIndices() throws IOException {
         for (int i = 0; i < indices.length; i++) {

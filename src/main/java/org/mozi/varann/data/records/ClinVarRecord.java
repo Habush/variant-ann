@@ -10,10 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents on entry in the Clinvar VCF database file
@@ -74,11 +71,11 @@ public class ClinVarRecord {
 	/**
 	 * Annotations, by index of reference
 	 */
-	private Multimap<String, ClinVarAnnotation> annotations = ArrayListMultimap.create();
+	private HashMap<String, Collection<ClinVarAnnotation>> annotations;
 
 	/**
 	 * Publication ids for this variant
 	 */
-	private Collection<String> pubmeds = new ArrayList<>();
+	private Collection<String> pubmeds;
 
 }

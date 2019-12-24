@@ -1,5 +1,6 @@
 package org.mozi.varann.data.impl.clinvar;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -13,10 +14,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import org.mozi.varann.data.impl.VariantContextToRecordConverter;
 import org.mozi.varann.data.records.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Helper class for the conversion of {@link VariantContext} to {@link ClinVarRecord} objects
@@ -63,7 +61,7 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 		List<Object> clnDiseaseDbId = vc.getAttributeAsList("CLNDISDB");
 		List<Object> clnDiseaseDbName = vc.getAttributeAsList("CLNDN");
 		List<Object> clnRevStat = vc.getAttributeAsList("CLNREVSTAT");
-
+		Multimap<String, ClinVarAnnotation> annotationMap = ArrayListMultimap.create();
 		for (int idx = 0; idx < alleleSize; ++idx) {
 			// Construct annotation builder
 			ClinVarAnnotation annoBuilder = new ClinVarAnnotation();
@@ -113,8 +111,10 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 					clnRevStatList));
 			annoBuilder.setDiseaseInfos(diseaseInfos);
 
-			builder.getAnnotations().put(vc.getAlternateAllele(idx).getBaseString(), annoBuilder);
+			annotationMap.put(vc.getAlternateAllele(idx).getBaseString(), annoBuilder);
 		}
+
+		builder.setAnnotations((HashMap<String, Collection<ClinVarAnnotation>>) annotationMap.asMap());
 
 		return builder;
 	}

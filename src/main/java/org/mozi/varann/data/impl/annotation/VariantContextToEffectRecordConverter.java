@@ -1,7 +1,9 @@
 package org.mozi.varann.data.impl.annotation;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
 import de.charite.compbio.jannovar.reference.GenomeVariant;
@@ -12,8 +14,7 @@ import org.mozi.varann.data.impl.VariantContextToRecordConverter;
 import org.mozi.varann.data.records.AnnotationRecord;
 import org.mozi.varann.data.records.VariantEffectRecord;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class VariantContextToEffectRecordConverter implements VariantContextToRecordConverter<VariantEffectRecord> {
 
@@ -37,35 +38,34 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
 
 
         String annStr = vc.getAttributeAsString("ANN", null).replace("[", "").replace("]", "");
+        Multimap<String, String> hgvsMap = ArrayListMultimap.create();
+        Multimap<String, AnnotationRecord> annotationRecMap = ArrayListMultimap.create();
         List<String> annRecords = Lists.newArrayList(annStr.split(","));
-        for(Allele all : vc.getAlternateAlleles()){
-            List<AnnotationRecord> records = new ArrayList<>();
-            for(String annRec : annRecords) {
-                String[] recs = annRec.split("\\|");
-                if(!recs[0].equals(all.getBaseString())) continue;
+        for (String annRec : annRecords) {
+            String[] recs = annRec.split("\\|");
+            String alt = recs[0];
 
-                String  geneSymbol = recs[3],
-                        featureType = recs[5],
-                        featureId = recs[6],
-                        bioType = recs[7],
-                        cdsChange = recs[9],
-                        proteinChange = recs[10];
-                AnnotationRecord record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, cdsChange, proteinChange);
-                String nomination = "";
-                if(!cdsChange.isEmpty()){
-                    nomination = String.format("%s(%s):%s(%s)", featureId, geneSymbol, cdsChange, proteinChange);
-                }
-                else {
-                    nomination = String.format("%s(%s):c.%s", featureId, geneSymbol, cdsChange);
-                }
-                builder.getHgvsNomination().add(nomination);
-                records.add(record);
+            String geneSymbol = recs[3],
+                    featureType = recs[5],
+                    featureId = recs[6],
+                    bioType = recs[7],
+                    cdsChange = recs[9],
+                    proteinChange = recs[10];
+            AnnotationRecord record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, cdsChange, proteinChange);
+            String nomination = "";
+            if (!cdsChange.isEmpty() & bioType.equals("Coding")) {
+                nomination = String.format("%s(%s):%s(%s)", featureId, geneSymbol, cdsChange, proteinChange);
+            } else if (!cdsChange.isEmpty() && bioType.equals("Noncoding")) {
+                nomination = String.format("%s(%s):%s", featureId, geneSymbol, cdsChange);
+            } else {
+                nomination = String.format("%s(%s):n.%d%s>%s", featureId, geneSymbol, builder.getPos(), builder.getRef(), alt);
             }
-            builder.getAnnotation().put(all.getBaseString(), records);
+            hgvsMap.put(alt, nomination);
+            annotationRecMap.put(alt, record);
         }
 
-        //Build hgvs string for each allele
-
+        builder.setAnnotation((HashMap<String, Collection<AnnotationRecord>>) annotationRecMap.asMap());
+        builder.setHgvsNomination((HashMap<String, Collection<String>>) hgvsMap.asMap());
         return builder;
     }
 }

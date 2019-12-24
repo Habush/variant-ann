@@ -1,4 +1,4 @@
-package org.mozi.varann.data;
+package org.mozi.varann.web.data;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -6,10 +6,7 @@ package org.mozi.varann.data;
  */
 
 import lombok.Data;
-import org.mozi.varann.data.records.ClinVarRecord;
-import org.mozi.varann.data.records.ExacRecord;
-import org.mozi.varann.data.records.ThousandGenomesRecord;
-import org.mozi.varann.data.records.VariantEffectRecord;
+import org.mozi.varann.data.records.*;
 
 /**
  * An aggregator class that holds the info about a variant from all dbs
@@ -53,9 +50,9 @@ public class VariantInfo {
 //    private DBSNPRecord dbsnp;
 
     /**
-     * {@link ClinVarRecord} info about this variant
+     * {@link DiseaseInfo} info about this variant
      */
-    private ClinVarRecord clinvar;
+    private DiseaseInfo disease;
 
     /**
      * {@link ThousandGenomesRecord} info about this variant
@@ -68,8 +65,10 @@ public class VariantInfo {
     private ExacRecord exac;
 
     /**
-     * {@link VariantEffectRecord} info about this variant
+     * {@link EffectInfo} info about this variant
      */
-    private VariantEffectRecord effect;
+    private EffectInfo effect;
+
+    private DBNSFPRecord scores;
 
 }
