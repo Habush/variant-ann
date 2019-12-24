@@ -69,4 +69,6 @@ public class VariantEffectRecord {
     @JsonIgnore
     private List<String> hgvs = new ArrayList<>();
 
+    private List<String> hgvsNomination = new ArrayList<>();
+
 }

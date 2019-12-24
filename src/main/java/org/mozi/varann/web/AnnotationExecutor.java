@@ -59,7 +59,6 @@ public class AnnotationExecutor {
         }
 
         SearchHit hit =  searchResponse.getHits().getAt(0);
-
         String hgvs = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs")).get(0);
 
         searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs), RequestOptions.DEFAULT);
@@ -82,16 +81,20 @@ public class AnnotationExecutor {
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"dbsnp"},"genes.symbol" ,gene, from, size), RequestOptions.DEFAULT);
 
         if(searchResponse.getHits().getTotalHits().value == 0){ //RsId not found
-            throw new AnnotationException("Couldn't find a variant with occuring in a gene " + gene);
+            throw new AnnotationException("Couldn't find a variant occurring in a gene " + gene);
         }
 
         List<VariantInfo> varInfos = new ArrayList<>();
 
         for(SearchHit hit : searchResponse.getHits()){
-            String hgvs = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs")).get(0);
 
-            searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs), RequestOptions.DEFAULT);
-            varInfos.add(buildVariantInfo(searchResponse.getHits()));
+            List<String> hgvs = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs"));
+            for(var hgv : hgvs) {
+                searchResponse = client.search(getSearchRequest(indices,"hgvs", hgv), RequestOptions.DEFAULT);
+                varInfos.add(buildVariantInfo(searchResponse.getHits()));
+            }
+
+
         }
 
         return varInfos;

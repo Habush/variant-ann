@@ -18,6 +18,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ResourceUtils;
+
+import java.io.FileNotFoundException;
 
 /**
  * The bean configuration to get Ignite instance
@@ -29,7 +32,7 @@ public class SpringConfig {
     private static final Logger logger = LogManager.getLogger(SpringConfig.class);
 
     @Bean
-    public static PropertyPlaceholderConfigurer properties() {
+    public static PropertyPlaceholderConfigurer properties() throws FileNotFoundException {
         PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
         ClassPathResource[] resources = new ClassPathResource[]{
                 new ClassPathResource("application.properties")

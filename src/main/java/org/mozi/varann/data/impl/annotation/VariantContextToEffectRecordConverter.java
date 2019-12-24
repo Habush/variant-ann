@@ -1,5 +1,6 @@
 package org.mozi.varann.data.impl.annotation;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
@@ -35,16 +36,29 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
         builder.setRsId(vc.getAttributeAsString("RS", null));
 
 
-        String annStr = vc.getAttributeAsString("ANN", null);
+        String annStr = vc.getAttributeAsString("ANN", null).replace("[", "").replace("]", "");
         List<String> annRecords = Lists.newArrayList(annStr.split(","));
         for(Allele all : vc.getAlternateAlleles()){
             List<AnnotationRecord> records = new ArrayList<>();
             for(String annRec : annRecords) {
                 String[] recs = annRec.split("\\|");
                 if(!recs[0].equals(all.getBaseString())) continue;
-                AnnotationRecord record = new AnnotationRecord(recs[1], recs[2], recs[5], recs[6],
-                        recs[7], recs[9], recs[10]);
 
+                String  geneSymbol = recs[3],
+                        featureType = recs[5],
+                        featureId = recs[6],
+                        bioType = recs[7],
+                        cdsChange = recs[9],
+                        proteinChange = recs[10];
+                AnnotationRecord record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, cdsChange, proteinChange);
+                String nomination = "";
+                if(!cdsChange.isEmpty()){
+                    nomination = String.format("%s(%s):%s(%s)", featureId, geneSymbol, cdsChange, proteinChange);
+                }
+                else {
+                    nomination = String.format("%s(%s):c.%s", featureId, geneSymbol, cdsChange);
+                }
+                builder.getHgvsNomination().add(nomination);
                 records.add(record);
             }
             builder.getAnnotation().put(all.getBaseString(), records);

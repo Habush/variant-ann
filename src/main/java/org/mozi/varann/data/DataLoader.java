@@ -6,9 +6,14 @@ import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.impl.util.PathUtil;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,22 +24,19 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
-import org.mozi.varann.data.records.VariantEffectRecord;
-import org.mozi.varann.data.records.ClinVarRecord;
+import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
+import org.mozi.varann.data.records.*;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
-import org.mozi.varann.data.records.DBSNPRecord;
 import org.mozi.varann.data.impl.dbsnp.DBSNPVariantContextToRecordConverter;
-import org.mozi.varann.data.records.ExacRecord;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
-import org.mozi.varann.data.records.ThousandGenomesRecord;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -75,6 +77,7 @@ public class DataLoader {
         addExacRecords();
         addG1kRecords();
         addVarEffectRecords();
+        addDBNSFPRecords();
     }
 
 
@@ -159,6 +162,40 @@ public class DataLoader {
         }
     }
 
+    private void addDBNSFPRecords() throws IOException{
+        Query<DBNSFPRecord> query = datastore.createQuery(DBNSFPRecord.class);
+        if(query.count() == 0){
+            logger.info("Adding DBNSFP Records...");
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "dbNSFP.tsv") : PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv");
+            try(BufferedReader reader = Files.newBufferedReader(Paths.get(fileName));
+                CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
+                DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
+                DBNSFPRecord dbsnpRecord = null;
+                for(CSVRecord csvRecord : parser.getRecords()){
+                    DBNSFPRecord record = converter.convert(csvRecord, referenceDictionary);
+                    if(dbsnpRecord != null && record.getChrom().equals(dbsnpRecord.getChrom())
+                            && record.getRef().equals(dbsnpRecord.getRef()) && record.getPos() == dbsnpRecord.getPos()){
+                        //If it is the same variant with d/t allele just update the scores
+                        dbsnpRecord.copy(record);
+                        query = datastore.createQuery(DBNSFPRecord.class).field("_id").equal(dbsnpRecord.get_id());
+                        UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
+                                .set("alt", dbsnpRecord.getAlt()).set("hgvs", dbsnpRecord.getHgvs())
+                                .set("sift", dbsnpRecord.getSift())
+                                .set("cadd", dbsnpRecord.getCadd()).set("polyphen2", dbsnpRecord.getPolyphen2())
+                                .set("lrt", dbsnpRecord.getLrt()).set("mutationTaster", dbsnpRecord.getMutationTaster())
+                                .set("dann", dbsnpRecord.getMutationTaster()).set("vest4", dbsnpRecord.getVest4());
+
+                         datastore.update(query, updateOp);
+                    } else {
+                        dbsnpRecord = record;
+                        datastore.save(dbsnpRecord);
+                    }
+                }
+            }
+        }
+
+    }
+
 
     /**
      * This method checks if an index exists and creates it if it doesn't
@@ -192,6 +229,13 @@ public class DataLoader {
         indexRequest.mapping(jsonMapping, XContentType.JSON);
         var response = client.indices().create(indexRequest, RequestOptions.DEFAULT);
         logger.info("Created " + response.index() + " index");
+    }
+
+    private static InputStream bufferAndDecompressIfNecessary(final InputStream in)
+            throws IOException {
+        // despite the name, SamStreams.isGzippedSAMFile looks for any gzipped stream (including block
+        // compressed)
+        return IOUtil.isGZIPInputStream(in) ? new GZIPInputStream(in) : in;
     }
 
 }
