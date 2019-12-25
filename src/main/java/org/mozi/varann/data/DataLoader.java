@@ -22,21 +22,23 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
-import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
-import org.mozi.varann.data.records.*;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
+import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.dbsnp.DBSNPVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
+import org.mozi.varann.data.records.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -69,17 +71,53 @@ public class DataLoader {
     private String[] indices;
 
     private static final String[] chrs = {
-           "X", "Y", "M"
+            "X", "Y", "M"
     };
+
     public void initData() throws IOException {
         checkIndices();
         logger.info("Loading records");
-        addClinvarRecords();
-        addDBSNPRecords();
-        addExacRecords();
-        addG1kRecords();
-        addVarEffectRecords();
-        addDBNSFPRecords();
+        ExecutorService execService = Executors.newFixedThreadPool(6);
+        List<Callable<Void>> tasks = new ArrayList<>();
+        ;
+        Callable<Void> clinvarTask = () -> {
+            addClinvarRecords();
+            return null;
+        };
+        tasks.add(clinvarTask);
+        Callable<Void> dbsnpTask = () -> {
+            addDBSNPRecords();
+            return null;
+        };
+        tasks.add(dbsnpTask);
+        Callable<Void> exacTask = () -> {
+            addExacRecords();
+            return null;
+        };
+        tasks.add(exacTask);
+        Callable<Void> g1kTask = () -> {
+            addG1kRecords();
+            return null;
+        };
+        tasks.add(g1kTask);
+        Callable<Void> varEffTask = () -> {
+            addVarEffectRecords();
+            return null;
+        };
+        tasks.add(varEffTask);
+        Callable<Void> dbnsfpTask = () -> {
+            addDBNSFPRecords();
+            return null;
+        };
+        tasks.add(dbnsfpTask);
+
+        try {
+            execService.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            logger.error(e);
+        }
+
     }
 
 
@@ -168,19 +206,18 @@ public class DataLoader {
         Query<DBNSFPRecord> query = datastore.createQuery(DBNSFPRecord.class);
         if (query.count() == 0) {
             logger.info("Adding DBNSFP Records...");
-            if(prod){
+            if (prod) {
                 //Add from chr1-22
-                for(int i = 1; i < 23; i++){
+                for (int i = 1; i < 23; i++) {
                     String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", i));
                     addDBNSFPRecord(filename, query);
                 }
                 //Add chr X, Y, M
-                for(String chr : chrs) {
+                for (String chr : chrs) {
                     String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", chr));
                     addDBNSFPRecord(filename, query);
                 }
-            }
-            else {
+            } else {
                 addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv"), query);
             }
         }
