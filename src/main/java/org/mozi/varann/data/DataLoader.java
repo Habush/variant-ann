@@ -77,12 +77,43 @@ public class DataLoader {
     public void initData() throws IOException, InterruptedException {
         checkIndices();
         logger.info("Loading records");
-        addClinvarRecords();
-        addDBSNPRecords();
-        addExacRecords();
-        addG1kRecords();
-        addVarEffectRecords();
-        addDBNSFPRecords();
+        ExecutorService execService = Executors.newFixedThreadPool(6);
+        List<Callable<Void>> tasks = new ArrayList<>();
+        ;
+        Callable<Void> clinvarTask = () -> {
+            addClinvarRecords();
+            return null;
+        };
+        tasks.add(clinvarTask);
+        Callable<Void> dbsnpTask = () -> {
+            addDBSNPRecords();
+            return null;
+        };
+        tasks.add(dbsnpTask);
+        Callable<Void> exacTask = () -> {
+            addExacRecords();
+            return null;
+        };
+        tasks.add(exacTask);
+        Callable<Void> g1kTask = () -> {
+            addG1kRecords();
+            return null;
+        };
+        tasks.add(g1kTask);
+        Callable<Void> varEffTask = () -> {
+            addVarEffectRecords();
+            return null;
+        };
+        tasks.add(varEffTask);
+        Callable<Void> dbnsfpTask = () -> {
+            addDBNSFPRecords();
+            return null;
+        };
+        tasks.add(dbnsfpTask);
+
+
+        execService.invokeAll(tasks);
+
 
     }
 
@@ -150,7 +181,7 @@ public class DataLoader {
                 VariantEffectRecord record = null;
                 for (VariantContext variantContext : fileReader) {
                     record = recordConverter.convert(variantContext, referenceDictionary);
-                    if(record != null) {
+                    if (record != null) {
                         datastore.save(record);
                     }
                 }
