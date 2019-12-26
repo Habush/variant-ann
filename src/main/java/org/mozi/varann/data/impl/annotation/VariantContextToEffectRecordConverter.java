@@ -14,6 +14,7 @@ import org.mozi.varann.data.impl.VariantContextToRecordConverter;
 import org.mozi.varann.data.records.AnnotationRecord;
 import org.mozi.varann.data.records.VariantEffectRecord;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class VariantContextToEffectRecordConverter implements VariantContextToRecordConverter<VariantEffectRecord> {
@@ -49,20 +50,30 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
             String[] recs = annRec.split("\\|");
             String alt = recs[0];
 
-            String geneSymbol = recs[3],
-                    featureType = recs[5],
-                    featureId = recs[6],
-                    bioType = recs[7],
-                    cdsChange = recs[9],
-                    proteinChange = recs[10];
-            AnnotationRecord record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, cdsChange, proteinChange);
             String nomination = "";
-            if (!cdsChange.isEmpty() & bioType.equals("Coding")) {
-                nomination = String.format("%s(%s):%s(%s)", featureId, geneSymbol, cdsChange, proteinChange);
-            } else if (!cdsChange.isEmpty() && bioType.equals("Noncoding")) {
-                nomination = String.format("%s(%s):%s", featureId, geneSymbol, cdsChange);
-            } else {
+            AnnotationRecord record = null;
+            if(recs.length < 10 ){
+                String geneSymbol = recs[3],
+                        featureType = recs[5],
+                        featureId = recs[6],
+                        bioType = recs[7];
                 nomination = String.format("%s(%s):n.%d%s>%s", featureId, geneSymbol, builder.getPos(), builder.getRef(), alt);
+                record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, "", "");
+            } else {
+                String geneSymbol = recs[3],
+                        featureType = recs[5],
+                        featureId = recs[6],
+                        bioType = recs[7],
+                        cdsChange = recs[9],
+                        proteinChange = recs[10];
+                 record = new AnnotationRecord(recs[1], recs[2], featureType, featureId, bioType, cdsChange, proteinChange);
+                if (!cdsChange.isEmpty() & bioType.equals("Coding")) {
+                    nomination = String.format("%s(%s):%s(%s)", featureId, geneSymbol, cdsChange, proteinChange);
+                } else if (!cdsChange.isEmpty() && bioType.equals("Noncoding")) {
+                    nomination = String.format("%s(%s):%s", featureId, geneSymbol, cdsChange);
+                } else {
+                    nomination = String.format("%s(%s):n.%d%s>%s", featureId, geneSymbol, builder.getPos(), builder.getRef(), alt);
+                }
             }
             hgvsMap.put(alt, nomination);
             annotationRecMap.put(alt, record);

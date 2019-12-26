@@ -29,7 +29,7 @@ public class VarianContextToEffectRecordConverterTest extends BaseTest {
     @ValueSource(strings = {"src/test/resources/var_effect_test.vcf"})
     public void testConvert(String path) {
         try(VCFFileReader fileReader = new VCFFileReader(new File(path), false)) {
-            VariantContext vc = fileReader.iterator().toList().get(0);
+            VariantContext vc = fileReader.iterator().toList().get(1);
             VariantContextToEffectRecordConverter converter = new VariantContextToEffectRecordConverter();
             VariantEffectRecord record = converter.convert(vc, refDict);
             Assert.assertTrue(record.getHgvsNomination().size() > 0);
