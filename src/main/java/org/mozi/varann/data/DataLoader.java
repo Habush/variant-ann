@@ -77,41 +77,12 @@ public class DataLoader {
     public void initData() throws IOException, InterruptedException {
         checkIndices();
         logger.info("Loading records");
-        ExecutorService execService = Executors.newFixedThreadPool(6);
-        List<Callable<Void>> tasks = new ArrayList<>();
-        ;
-        Callable<Void> clinvarTask = () -> {
-            addClinvarRecords();
-            return null;
-        };
-        tasks.add(clinvarTask);
-        Callable<Void> dbsnpTask = () -> {
-            addDBSNPRecords();
-            return null;
-        };
-        tasks.add(dbsnpTask);
-        Callable<Void> exacTask = () -> {
-            addExacRecords();
-            return null;
-        };
-        tasks.add(exacTask);
-        Callable<Void> g1kTask = () -> {
-            addG1kRecords();
-            return null;
-        };
-        tasks.add(g1kTask);
-        Callable<Void> varEffTask = () -> {
-            addVarEffectRecords();
-            return null;
-        };
-        tasks.add(varEffTask);
-        Callable<Void> dbnsfpTask = () -> {
-            addDBNSFPRecords();
-            return null;
-        };
-        tasks.add(dbnsfpTask);
-
-        execService.invokeAll(tasks);
+        addClinvarRecords();
+        addDBSNPRecords();
+        addExacRecords();
+        addG1kRecords();
+        addVarEffectRecords();
+        addDBNSFPRecords();
 
     }
 
@@ -232,7 +203,6 @@ public class DataLoader {
                         && record.getRef().equals(dbsnpRecord.getRef()) && record.getPos() == dbsnpRecord.getPos()) {
                     //If it is the same variant with d/t allele just update the scores
                     dbsnpRecord.copy(record);
-                    query = datastore.createQuery(DBNSFPRecord.class).field("_id").equal(dbsnpRecord.get_id());
                     UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
                             .set("alt", dbsnpRecord.getAlt()).set("hgvs", dbsnpRecord.getHgvs())
                             .set("sift", dbsnpRecord.getSift())
