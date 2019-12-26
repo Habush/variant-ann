@@ -1,8 +1,8 @@
 package org.mozi.varann.data.impl.annotation;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
@@ -14,7 +14,7 @@ import org.mozi.varann.data.impl.VariantContextToRecordConverter;
 import org.mozi.varann.data.records.AnnotationRecord;
 import org.mozi.varann.data.records.VariantEffectRecord;
 
-import java.util.*;
+import java.util.List;
 
 public class VariantContextToEffectRecordConverter implements VariantContextToRecordConverter<VariantEffectRecord> {
 
@@ -64,8 +64,8 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
             annotationRecMap.put(alt, record);
         }
 
-        builder.setAnnotation((HashMap<String, Collection<AnnotationRecord>>) annotationRecMap.asMap());
-        builder.setHgvsNomination((HashMap<String, Collection<String>>) hgvsMap.asMap());
+        builder.setAnnotation(Maps.newHashMap(annotationRecMap.asMap()));
+        builder.setHgvsNomination(Maps.newHashMap(hgvsMap.asMap()));
         return builder;
     }
 }

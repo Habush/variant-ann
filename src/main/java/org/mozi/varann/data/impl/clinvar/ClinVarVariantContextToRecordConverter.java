@@ -1,9 +1,6 @@
 package org.mozi.varann.data.impl.clinvar;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
 import de.charite.compbio.jannovar.reference.GenomeVariant;
@@ -114,7 +111,7 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 			annotationMap.put(vc.getAlternateAllele(idx).getBaseString(), annoBuilder);
 		}
 
-		builder.setAnnotations((HashMap<String, Collection<ClinVarAnnotation>>) annotationMap.asMap());
+		builder.setAnnotations(Maps.newHashMap(annotationMap.asMap()));
 
 		return builder;
 	}

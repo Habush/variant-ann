@@ -30,7 +30,7 @@ public class Startup implements ApplicationListener<ContextRefreshedEvent> {
             logger.info("Initializing the app....");
             loader.initData();
             logger.info("Records loaded.");
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             System.exit(1);
         }

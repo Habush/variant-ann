@@ -74,7 +74,7 @@ public class DataLoader {
             "X", "Y", "M"
     };
 
-    public void initData() throws IOException {
+    public void initData() throws IOException, InterruptedException {
         checkIndices();
         logger.info("Loading records");
         ExecutorService execService = Executors.newFixedThreadPool(6);
@@ -111,12 +111,7 @@ public class DataLoader {
         };
         tasks.add(dbnsfpTask);
 
-        try {
-            execService.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            logger.error(e);
-        }
+        execService.invokeAll(tasks);
 
     }
 
