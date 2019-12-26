@@ -63,8 +63,21 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 			// Construct annotation builder
 			ClinVarAnnotation annoBuilder = new ClinVarAnnotation();
 			// One element: CLNHGVS, CLNORIGIN
-			ArrayList<String> hgvsList = Lists.newArrayList(((String) hgvs.get(idx)).split("\\|"));
-			ArrayList<String> clnOriginList = Lists.newArrayList(((String) clnOrigin.get(idx)).split("\\|"));
+			if(hgvs.size() > 0){
+				ArrayList<String> hgvsList = Lists.newArrayList(((String) hgvs.get(idx)).split("\\|"));
+				// Set one-element lists into annoBuilder
+				annoBuilder.setAlleleMapping(idx);
+				if (hgvsList.size() != 1)
+					throw new RuntimeException("Invalid HGVS size, must be 1");
+				annoBuilder.setHgvsVariant(hgvsList.get(0));
+			}
+
+			if(clnOrigin.size() > 0) {
+				ArrayList<String> clnOriginList  = Lists.newArrayList(((String) clnOrigin.get(idx)).split("\\|"));
+				if (clnOriginList.size() != 1)
+					throw new RuntimeException("Invalid CLNORIGIN size, must be 1");
+				annoBuilder.setOrigin(ClinVarOrigin.fromInteger(Integer.parseInt(clnOriginList.get(0))));
+			}
 
 			// Variant source information: CLNSRC, CLNSRCID
 			if(clnSrc.size() > 0 && clnSrcId.size() > 0){
@@ -80,33 +93,26 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 			}
 
 			// Variant disease information: CLNSIG, CLNDSDB, CLINDSDBID, CLDSDBN, CLNREVSTAT, CLNACC
-			ArrayList<String> clnSigList = Lists.newArrayList(((String) clnSig.get(idx)).split("\\|"));
-			ArrayList<String> clnDiseaseDbIdList = Lists.newArrayList(((String) clnDiseaseDbId.get(idx)).split("\\|"));
-			ArrayList<String> clnDiseaseDbNameList = Lists
-				.newArrayList(((String) clnDiseaseDbName.get(idx)).split("\\|"));
-			ArrayList<String> clnRevStatList = Lists.newArrayList(((String) clnRevStat.get(idx)).split("\\|"));
+			if(clnSig.size() > 0 && clnDiseaseDbId.size() > 0 && clnDiseaseDbName.size() > 0 && clnRevStat.size() > 0){
+				ArrayList<String> clnSigList = Lists.newArrayList(((String) clnSig.get(idx)).split("\\|"));
+				ArrayList<String> clnDiseaseDbIdList = Lists.newArrayList(((String) clnDiseaseDbId.get(idx)).split("\\|"));
+				ArrayList<String> clnDiseaseDbNameList = Lists
+						.newArrayList(((String) clnDiseaseDbName.get(idx)).split("\\|"));
+				ArrayList<String> clnRevStatList = Lists.newArrayList(((String) clnRevStat.get(idx)).split("\\|"));
+				// Construct variant disease information
+				List<ClinVarDiseaseInfo> diseaseInfos = new ArrayList<>();
+				int numDiseaseAlleles = Collections
+						.max(ImmutableList.of(clnSigList.size(), clnDiseaseDbIdList.size(),
+								clnDiseaseDbNameList.size(), clnRevStatList.size()));
+				for (int i = 0; i < numDiseaseAlleles; ++i)
+					diseaseInfos.add(new ClinVarDiseaseInfo(
+							clnSigList,
+							getFromList(clnDiseaseDbIdList, i, ""),
+							getFromList(clnDiseaseDbNameList, i, ""),
+							clnRevStatList));
+				annoBuilder.setDiseaseInfos(diseaseInfos);
 
-			// Set one-element lists into annoBuilder
-			annoBuilder.setAlleleMapping(idx);
-			if (hgvsList.size() != 1)
-				throw new RuntimeException("Invalid HGVS size, must be 1");
-			annoBuilder.setHgvsVariant(hgvsList.get(0));
-			if (clnOriginList.size() != 1)
-				throw new RuntimeException("Invalid CLNORIGIN size, must be 1");
-			annoBuilder.setOrigin(ClinVarOrigin.fromInteger(Integer.parseInt(clnOriginList.get(0))));
-
-			// Construct variant disease information
-			List<ClinVarDiseaseInfo> diseaseInfos = new ArrayList<>();
-			int numDiseaseAlleles = Collections
-				.max(ImmutableList.of(clnSigList.size(), clnDiseaseDbIdList.size(),
-					clnDiseaseDbNameList.size(), clnRevStatList.size()));
-			for (int i = 0; i < numDiseaseAlleles; ++i)
-				diseaseInfos.add(new ClinVarDiseaseInfo(
-					clnSigList,
-					 getFromList(clnDiseaseDbIdList, i, ""),
-					getFromList(clnDiseaseDbNameList, i, ""),
-					clnRevStatList));
-			annoBuilder.setDiseaseInfos(diseaseInfos);
+			}
 
 			annotationMap.put(vc.getAlternateAllele(idx).getBaseString(), annoBuilder);
 		}
