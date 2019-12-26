@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class ExacVariantContextToRecordConverter implements VariantContextToRecordConverter<ExacRecord> {
 
 	@Override
-	public ExacRecord convert(VariantContext vc, ReferenceDictionary refDic) {
+	public ExacRecord convert(VariantContext vc, ReferenceDictionary refDict) {
 		ExacRecord builder = new ExacRecord();
 
 		// Column-level properties from VCF file
@@ -33,7 +33,7 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 		builder.setRef(vc.getReference().getBaseString());
 		for (Allele all : vc.getAlternateAlleles()){
 			builder.getAlt().add(all.getBaseString());
-			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDic, Strand.FWD, Integer.parseInt(builder.getChrom()), builder.getPos()), builder.getRef(), all.getBaseString());
+			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos()), builder.getRef(), all.getBaseString());
 			builder.getHgvs().add(variant.toString());
 		}
 

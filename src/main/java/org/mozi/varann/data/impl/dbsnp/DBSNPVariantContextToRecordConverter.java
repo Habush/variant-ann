@@ -28,7 +28,7 @@ public class DBSNPVariantContextToRecordConverter implements VariantContextToRec
 	 * @param vc {@link VariantContext} to convert
 	 * @return Resulting {@link DBSNPRecord}
 	 */
-	public DBSNPRecord convert(VariantContext vc, ReferenceDictionary refDic) {
+	public DBSNPRecord convert(VariantContext vc, ReferenceDictionary refDict) {
 		DBSNPRecord builder = new DBSNPRecord();
 
 		// Column-level properties from VCF file
@@ -39,7 +39,7 @@ public class DBSNPVariantContextToRecordConverter implements VariantContextToRec
 		builder.getFilter().addAll(vc.getFilters());
 		for (Allele all : vc.getAlternateAlleles()){
 			builder.getAlt().add(all.getBaseString());
-			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDic, Strand.FWD, Integer.parseInt(builder.getChrom()), builder.getPos()), builder.getRef(), all.getBaseString());
+			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos()), builder.getRef(), all.getBaseString());
 			builder.getHgvs().add(variant.toString());
 		}
 

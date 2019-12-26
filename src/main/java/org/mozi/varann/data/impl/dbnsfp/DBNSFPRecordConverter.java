@@ -27,7 +27,7 @@ public class DBNSFPRecordConverter {
         builder.setPos(Integer.parseInt(record.get("hg19_pos(1-based)")));
         builder.setRef(record.get("ref"));
         builder.getAlt().add(record.get("alt"));
-        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, Integer.parseInt(builder.getChrom()), builder.getPos()), builder.getRef(), record.get("alt"));
+        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(builder.getChrom()), builder.getPos()), builder.getRef(), record.get("alt"));
         builder.getHgvs().add(variant.toString());
 
         //Add scores and predictions

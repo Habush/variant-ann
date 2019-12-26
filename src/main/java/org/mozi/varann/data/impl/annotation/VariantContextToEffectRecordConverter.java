@@ -29,7 +29,7 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
         builder.setRef(vc.getReference().getBaseString());
         for (Allele all : vc.getAlternateAlleles()) {
             builder.getAlt().add(all.getBaseString());
-            GenomeVariant gv = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, Integer.parseInt(builder.getChrom()), builder.getPos()), builder.getRef(), all.getBaseString());
+            GenomeVariant gv = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos()), builder.getRef(), all.getBaseString());
             builder.getHgvs().add(gv.toString());
         }
 
