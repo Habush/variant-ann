@@ -37,7 +37,11 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
         builder.setRsId(vc.getAttributeAsString("RS", null));
 
 
-        String annStr = vc.getAttributeAsString("ANN", null).replace("[", "").replace("]", "");
+        String annStr = vc.getAttributeAsString("ANN", null);
+        if(annStr == null) {
+            return null;
+        }
+        annStr = annStr.replace("[", "").replace("]", "");
         Multimap<String, String> hgvsMap = ArrayListMultimap.create();
         Multimap<String, AnnotationRecord> annotationRecMap = ArrayListMultimap.create();
         List<String> annRecords = Lists.newArrayList(annStr.split(","));

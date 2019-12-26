@@ -147,8 +147,12 @@ public class DataLoader {
             String fileName = prod ? PathUtil.join(basePath, "vcfs", "var_effect.vcf.gz") : PathUtil.join(basePath, "vcfs", "var_effect_sample_ensembl.vcf");
             try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
                 VariantContextToEffectRecordConverter recordConverter = new VariantContextToEffectRecordConverter();
+                VariantEffectRecord record = null;
                 for (VariantContext variantContext : fileReader) {
-                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
+                    record = recordConverter.convert(variantContext, referenceDictionary);
+                    if(record != null) {
+                        datastore.save(record);
+                    }
                 }
             }
         }
@@ -191,7 +195,7 @@ public class DataLoader {
     }
 
     private void addDBNSFPRecord(String fileName, Query<DBNSFPRecord> query) throws IOException {
-        try (Reader decoder = new InputStreamReader(bufferAndDecompressIfNecessary(new FileInputStream(fileName)));
+        try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
              BufferedReader reader = new BufferedReader(decoder);
              CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
 
@@ -251,13 +255,6 @@ public class DataLoader {
         indexRequest.mapping(jsonMapping, XContentType.JSON);
         var response = client.indices().create(indexRequest, RequestOptions.DEFAULT);
         logger.info("Created " + response.index() + " index");
-    }
-
-    private static InputStream bufferAndDecompressIfNecessary(final InputStream in)
-            throws IOException {
-        // despite the name, SamStreams.isGzippedSAMFile looks for any gzipped stream (including block
-        // compressed)
-        return IOUtil.isGZIPInputStream(in) ? new GZIPInputStream(in) : in;
     }
 
 }
