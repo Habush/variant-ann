@@ -25,6 +25,7 @@
         <spring-boot-version>2.1.5.RELEASE</spring-boot-version>
         <htsjdk.version>2.20.3</htsjdk.version>
         <mongo.version>3.8.0</mongo.version>
+        <elasticsearch.version>7.5.0</elasticsearch.version>
     </properties>
 
     <developers>
@@ -141,7 +142,7 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>7.5.0</version>
+            <version>${elasticsearch.version}</version>
         </dependency>
 
         <!-- Mongo dependencies -->
@@ -187,7 +188,12 @@
             <version>${spring-boot-version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.elasticsearch.test</groupId>
+            <artifactId>framework</artifactId>
+            <version>${elasticsearch.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

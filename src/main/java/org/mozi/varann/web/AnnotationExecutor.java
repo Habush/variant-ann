@@ -49,7 +49,6 @@ public class AnnotationExecutor {
         }
 
         //Query dbSNP for the id;
-        //TODO Handle the case for rsid with multiple alleles
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"dbsnp"},"rsId" ,id), RequestOptions.DEFAULT);
 
         if(searchResponse.getHits().getTotalHits().value == 0){ //RsId not found
@@ -66,7 +65,7 @@ public class AnnotationExecutor {
 
         searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs.get(0)), RequestOptions.DEFAULT);
 
-        return buildVariantInfoHgvs(searchResponse.getHits(), hgvs.get(0));
+        return buildVariantInfo(searchResponse.getHits(), hgvs.get(0));
 
 
     }
@@ -77,7 +76,7 @@ public class AnnotationExecutor {
             throw new AnnotationException("Couldn't find a variant with hgvs id " + hgvs);
         }
         searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs), RequestOptions.DEFAULT);
-        return buildVariantInfoHgvs(searchResponse.getHits(), hgvs);
+        return buildVariantInfo(searchResponse.getHits(), hgvs);
     }
 
     public List<VariantInfo> annotateByGene(String gene, int from, int size) throws AnnotationException, IOException {
@@ -94,7 +93,7 @@ public class AnnotationExecutor {
             List<String> hgvs = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs"));
             for(var hgv : hgvs) {
                 searchResponse = client.search(getSearchRequest(indices,"hgvs", hgv), RequestOptions.DEFAULT);
-                //varInfos.add(buildVariantInfo(searchResponse.getHits()));
+                varInfos.add(buildVariantInfo(searchResponse.getHits(), hgv));
             }
 
 
@@ -119,7 +118,7 @@ public class AnnotationExecutor {
         return searchRequest;
     }
 
-    private VariantInfo buildVariantInfoHgvs(SearchHits hits, String hgvs) {
+    private VariantInfo buildVariantInfo(SearchHits hits, String hgvs) {
         VariantInfo varInfo = new VariantInfo();
         for(var hit : hits){
             String index = hit.getIndex();
@@ -173,47 +172,4 @@ public class AnnotationExecutor {
 
         return varInfo;
     }
-
-    /*private VariantInfo buildVariantInfo(SearchHits hits) {
-        VariantInfo varInfo = new VariantInfo();
-        for(var hit : hits){
-            String index = hit.getIndex();
-            String id = hit.getId();
-            switch (index) {
-                case "dbsnp":
-                    varInfo.setChrom((String)hit.getSourceAsMap().get("chrom"));
-                    varInfo.setPos((int)hit.getSourceAsMap().get("pos"));
-                    varInfo.setId((String)hit.getSourceAsMap().get("rsId"));
-                    varInfo.setRef((String)hit.getSourceAsMap().get("ref"));
-                    String alt = ((ArrayList<String>)hit.getSourceAsMap().get("alt")).get(0);
-                    String hgvs = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs")).get(0);
-                    varInfo.setAlt(alt);
-                    varInfo.setHgvs(hgvs);
-                    break;
-                case "clinvar":
-                    var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
-                    ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setClinvar(clinvarRec);
-                    break;
-                case "exac":
-                    var exacQuery = datastore.createQuery(ExacRecord.class);
-                    ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setExac(exacRec);
-                    break;
-                case "effect":
-                    var effectQuery = datastore.createQuery(VariantEffectRecord.class);
-                    VariantEffectRecord effectRec = effectQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setEffect(effectRec);
-                    break;
-
-                case "g1k":
-                    var g1kQuery = datastore.createQuery(ThousandGenomesRecord.class);
-                    ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setThousandGenome(g1kRec);
-                    break;
-            }
-        }
-
-        return varInfo;
-    }*/
 }

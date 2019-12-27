@@ -210,11 +210,13 @@ public class DataLoader {
             if (prod) {
                 //Add from chr1-22
                 for (int i = 1; i < 23; i++) {
+                    logger.info("Adding Records for chr" + i);
                     String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", i));
                     addDBNSFPRecord(filename, query);
                 }
                 //Add chr X, Y, M
                 for (String chr : chrs) {
+                    logger.info("Adding Records for chr" + chr);
                     String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", chr));
                     addDBNSFPRecord(filename, query);
                 }
