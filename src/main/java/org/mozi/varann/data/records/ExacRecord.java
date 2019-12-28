@@ -6,6 +6,7 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.mozi.varann.data.impl.exac.ExacPopulation;
@@ -19,48 +20,19 @@ import java.util.List;
  *
  * @author <a href="mailto:manuel.holtgrewe@bihealth.de">Manuel Holtgrewe</a>
  */
+@EqualsAndHashCode(callSuper = true)
 @Entity("exac")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExacRecord {
+public class ExacRecord extends BaseRecord {
 	 @Id
 	 @JsonIgnore
 	 private ObjectId _id;
 
+	 @JsonIgnore
+	 private String id;
 	// Fields up to the INFO column
-
-	/**
-	 * Name of the chromosome
-	 */
-	@JsonIgnore
-	private String chrom;
-	/**
-	 * Position of the variant, 0-based
-	 */
-	@JsonIgnore
-	private int pos;
-	/**
-	 * ID of the variant
-	 */
-	@JsonIgnore
-	private String id;
-	/**
-	 * Reference sequence
-	 */
-	@JsonIgnore
-	private String ref;
-	/**
-	 * Alternative alleles in cluster
-	 */
-	@JsonIgnore
-	private List<String> alt = new ArrayList<>();
-
-	/**
-	 * Hgvs string for each variant
-	 */
-	@JsonIgnore
-	private List<String> hgvs = new ArrayList<>();
 	/**
 	 * Filters, NC: inconsistent genotype submission for at least one sample
 	 */

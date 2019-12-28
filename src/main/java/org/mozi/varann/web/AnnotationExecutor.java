@@ -71,11 +71,11 @@ public class AnnotationExecutor {
     }
 
     public VariantInfo annotateHgvs(String hgvs) throws AnnotationException, IOException {
-        var searchResponse = client.search(getSearchRequest(new String[]{"dbsnp"},"hgvs", hgvs), RequestOptions.DEFAULT);
+
+        var searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs), RequestOptions.DEFAULT);
         if(searchResponse.getHits().getTotalHits().value == 0){ //RsId not found
             throw new AnnotationException("Couldn't find a variant with hgvs id " + hgvs);
         }
-        searchResponse = client.search(getSearchRequest(indices,"hgvs", hgvs), RequestOptions.DEFAULT);
         return buildVariantInfo(searchResponse.getHits(), hgvs);
     }
 

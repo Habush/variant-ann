@@ -6,6 +6,7 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesPopulation;
@@ -19,40 +20,18 @@ import java.util.List;
  *
  * @author <a href="mailto:manuel.holtgrewe@bihealth.de">Manuel Holtgrewe</a>
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity("g1k")
 @AllArgsConstructor
 @NoArgsConstructor
-public class ThousandGenomesRecord {
+public class ThousandGenomesRecord extends BaseRecord {
 	@Id
 	@JsonIgnore
 	private ObjectId _id;
-	// Fields up to the INFO column
-
-	/**
-	 * Name of the chromosome
-	 */@JsonIgnore
-	private String chrom;
-	/**
-	 * Position of the variant, 0-based
-	 */@JsonIgnore
-	private int pos;
-	/**
-	 * dbSNP rsId
-	 */@JsonIgnore
+	@JsonIgnore
 	private String rsId;
-	/**
-	 * Reference sequence
-	 */@JsonIgnore
-	private String ref;
-	/**
-	 * Alternative alleles in cluster
-	 */@JsonIgnore
-	private List<String> alt = new ArrayList<>();
-	/**
-	 * Hgvs strings for each alternate allele
-	 */@JsonIgnore
-	private List<String> hgvs = new ArrayList<>();
+	// Fields up to the INFO column
 	/**
 	 * Filters, RF: failed random forest, AC0: Allele count is zero, InbreedingCoeff: InbreedingCoeff < threshold, LCR:
 	 * in a low-complexity region, SEGDUP: in a segmental duplication region

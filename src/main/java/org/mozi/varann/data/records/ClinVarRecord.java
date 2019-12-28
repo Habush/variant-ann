@@ -7,6 +7,7 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
@@ -17,48 +18,18 @@ import java.util.*;
  *
  * @author <a href="mailto:manuel.holtgrewe@bihealth.de">Manuel Holtgrewe</a>
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity("clinvar")
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClinVarRecord {
+public class ClinVarRecord extends BaseRecord {
 
 	// Fields up to the INFO column
 	@Id
 	@JsonIgnore
 	private ObjectId _id;
 
-	/**
-	 * Name of the chromosome
-	 */
-	@JsonIgnore
-	private String chrom;
-	/**
-	 * Position of the variant, 0-based
-	 */
-	@JsonIgnore
-	private int pos;
-	/**
-	 * ID of the variant
-	 */
-	@JsonIgnore
-	private String alleleId;
-	/**
-	 * Reference sequence
-	 */
-	@JsonIgnore
-	private String ref;
-	/**
-	 * Alternative alleles in cluster
-	 */
-	@JsonIgnore
-	private List<String> alt = new ArrayList<>();
-
-	/**
-	 * Hgvs strings for each alternate allele
-	 */
-	@JsonIgnore
-	private List<String> hgvs = new ArrayList<>();
 
 	// TODO: enable the following two settings as well
 	/** Whether or not there is an OMIM/OMIA annotation */

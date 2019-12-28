@@ -26,7 +26,7 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
 
         builder.setChrom(vc.getContig());
         builder.setPos(vc.getStart());
-        builder.setId(vc.getID());
+        builder.setRsId(vc.getID());
         builder.setRef(vc.getReference().getBaseString());
         for (Allele all : vc.getAlternateAlleles()) {
             builder.getAlt().add(all.getBaseString());

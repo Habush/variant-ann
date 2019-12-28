@@ -24,7 +24,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity("dbsnp")
-public final class DBSNPRecord {
+public final class DBSNPRecord extends BaseRecord {
 
 	/**
 	 * Mongo Id
@@ -33,33 +33,9 @@ public final class DBSNPRecord {
 	 @Id
 	 private ObjectId _id;
 
+	@JsonIgnore
+	private String id;
 	// Fields up to the INFO column
-
-	/**
-	 * Name of the chromosome
-	 */
-	 private String chrom;
-	/**
-	 * Position of the variant, 0-based
-	 */
-	 private int pos;
-	/**
-	 * ID of the variant
-	 */
-	 private String id;
-	/**
-	 * Reference sequence
-	 */
-	 private String ref;
-	/**
-	 * Alternative alleles in cluster
-	 */
-	private List<String> alt = new ArrayList<>();
-
-    /**
-	 * hgvs string
-	 */
-	private List<String> hgvs = new ArrayList<>();
 	/**
 	 * Filters, NC: inconsistent genotype submission for at least one sample
 	 */

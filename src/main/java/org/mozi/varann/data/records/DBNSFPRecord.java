@@ -5,6 +5,7 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
@@ -15,44 +16,18 @@ import java.util.List;
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
  * 12/23/19
  */
+@EqualsAndHashCode(callSuper = true)
 @Entity("dbnsfp")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DBNSFPRecord {
+public class DBNSFPRecord extends BaseRecord {
 
     @Id
     @JsonIgnore
     private ObjectId _id;
 
     // Fields up to the INFO column
-
-    /**
-     * Name of the chromosome
-     */
-    @JsonIgnore
-    private String chrom;
-    /**
-     * Position of the variant, 0-based
-     */
-    @JsonIgnore
-    private int pos;
-    /**
-     * Reference sequence
-     */
-    @JsonIgnore
-    private String ref;
-    /**
-     * Alternative alleles in cluster
-     */
-    @JsonIgnore
-    private List<String> alt = new ArrayList<>();
-
-    /**
-     * Hgvs string
-     */
-    @JsonIgnore
-    private List<String> hgvs = new ArrayList<>();
 
     /**
      * SIFT scores
