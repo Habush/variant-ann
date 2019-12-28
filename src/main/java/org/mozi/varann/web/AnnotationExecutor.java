@@ -125,15 +125,13 @@ public class AnnotationExecutor {
             String id = hit.getId();
             int hgvsIndex = ((ArrayList<String>)hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
             String alt = ((ArrayList<String>)hit.getSourceAsMap().get("alt")).get(hgvsIndex);
+            if(varInfo.getAlt() == null){
+                varInfo.setAlt(alt);
+                varInfo.setHgvs(hgvs);
+            }
             switch (index) {
                 case "dbsnp":
-                    varInfo.setChrom((String)hit.getSourceAsMap().get("chrom"));
-                    varInfo.setPos((int)hit.getSourceAsMap().get("pos"));
-                    varInfo.setId((String)hit.getSourceAsMap().get("rsId"));
-                    varInfo.setRef((String)hit.getSourceAsMap().get("ref"));
-
-                    varInfo.setAlt(alt);
-                    varInfo.setHgvs(hgvs);
+                    setRecord(varInfo, hit);
                     break;
                 case "clinvar":
                     var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
@@ -168,8 +166,19 @@ public class AnnotationExecutor {
                     varInfo.setScores(dbnsfpRec);
                     break;
             }
+
+            if(varInfo.getRef() == null){
+                setRecord(varInfo, hit);
+            }
         }
 
         return varInfo;
+    }
+
+    private void setRecord(VariantInfo varInfo, SearchHit hit) {
+        varInfo.setChrom((String)hit.getSourceAsMap().get("chrom"));
+        varInfo.setPos((int)hit.getSourceAsMap().get("pos"));
+        varInfo.setId((String)hit.getSourceAsMap().get("id"));
+        varInfo.setRef((String)hit.getSourceAsMap().get("ref"));
     }
 }
