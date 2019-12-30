@@ -60,10 +60,6 @@ public final class DBSNPRecord extends BaseRecord {
 	 */
 	 private DBSNPVariantProperty variantProperty;
 	/**
-	 * Gene information of overlapping genes
-	 */
-	 private List<GeneInfo> genes = new ArrayList<>();
-	/**
 	 * ID of first dbSNP build where this variant appears
 	 */
 	 private int dbSNPBuildID;

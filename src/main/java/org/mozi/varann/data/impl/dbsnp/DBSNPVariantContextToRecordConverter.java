@@ -50,14 +50,6 @@ public class DBSNPVariantContextToRecordConverter implements VariantContextToRec
 		builder.setRsPos(vc.getAttributeAsInt("RSPOS", -1));
 		builder.setReversed(vc.hasAttribute("RV"));
 		builder.setVariantProperty(null); // TODO
-		for (String strGeneInfo : Splitter.on("|").split(vc.getAttributeAsString("GENEINFO", ""))) {
-			strGeneInfo = strGeneInfo.trim();
-			if (strGeneInfo.isEmpty())
-				continue;
-			ArrayList<String> arr = Lists.newArrayList(Splitter.on(":").split(strGeneInfo));
-			assert arr.size() == 2;
-			builder.getGenes().add(new GeneInfo(arr.get(0), arr.get(1)));
-		}
 		builder.setDbSNPBuildID(vc.getAttributeAsInt("dbSNPBuildID", -1));
 
 		// TODO: can be cleaned up by having methods in Enum

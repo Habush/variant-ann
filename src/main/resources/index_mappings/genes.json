@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "chrom": {
+      "type": "keyword"
+    },
+    "start": {
+      "type": "long"
+    },
+    "end": {
+      "type": "long"
+    },
+    "symbol": {
+      "type": "keyword"
+    },
+    "entrezID": {
+      "type": "keyword"
+    }
+  }
+}

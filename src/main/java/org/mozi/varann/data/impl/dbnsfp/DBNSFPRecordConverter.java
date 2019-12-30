@@ -5,6 +5,7 @@ import de.charite.compbio.jannovar.reference.GenomePosition;
 import de.charite.compbio.jannovar.reference.GenomeVariant;
 import de.charite.compbio.jannovar.reference.Strand;
 import org.apache.commons.csv.CSVRecord;
+import org.mozi.varann.data.impl.TSVToRecordConverter;
 import org.mozi.varann.data.records.DBNSFPRecord;
 import org.mozi.varann.data.records.PredictedEffect;
 import org.mozi.varann.data.records.PredictedScore;
@@ -16,7 +17,7 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
  * 12/23/19
  */
-public class DBNSFPRecordConverter {
+public class DBNSFPRecordConverter implements TSVToRecordConverter<DBNSFPRecord, CSVRecord> {
 
     private static final Pattern patScore = Pattern.compile("([\\.;]+)?([-|+]?\\d+\\.?\\d*$)");
     private static final Pattern patPred = Pattern.compile("([\\.;]+)?([T|D|B|N|P|U]$)");

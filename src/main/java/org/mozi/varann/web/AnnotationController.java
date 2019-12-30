@@ -21,17 +21,16 @@ public class AnnotationController {
     public VariantInfo annotateById(@PathVariable String id) throws AnnotationException, IOException {
         return annotationExec.annotateId(id);
     }
+
     @RequestMapping(value = "/annotate", method = RequestMethod.GET)
     @ResponseBody
-    public VariantInfo annotateByHgvs(@RequestParam(value="hgvs") String hgvs) throws AnnotationException, IOException {
+    public VariantInfo annotateByHgvs(@RequestParam(value = "hgvs") String hgvs) throws AnnotationException, IOException {
         return annotationExec.annotateHgvs(hgvs);
     }
 
     @RequestMapping(value = "/annotate/gene/{gene}", method = RequestMethod.GET)
     @ResponseBody
-    public List<VariantInfo> annotateByGene(@PathVariable String gene, @RequestParam(value = "from", defaultValue="0") int from,
-                                            @RequestParam(value = "from", defaultValue="10") int size) throws AnnotationException, IOException {
+    public List<VariantInfo> annotateByGene(@PathVariable String gene, @RequestParam(value = "from", defaultValue = "0") int from, @RequestParam(value = "from", defaultValue = "10") int size) throws AnnotationException, IOException {
         return annotationExec.annotateByGene(gene, from, size);
     }
-
 }

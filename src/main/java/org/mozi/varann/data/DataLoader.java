@@ -29,11 +29,14 @@ import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.dbsnp.DBSNPVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
+import org.mozi.varann.data.impl.genes.GeneRecordConverter;
 import org.mozi.varann.data.records.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -77,44 +80,54 @@ public class DataLoader {
     public void initData() throws IOException, InterruptedException {
         checkIndices();
         logger.info("Loading records");
-        ExecutorService execService = Executors.newFixedThreadPool(6);
+        ExecutorService execService = Executors.newFixedThreadPool(7);
         List<Callable<Void>> tasks = new ArrayList<>();
         ;
         Callable<Void> clinvarTask = () -> {
             addClinvarRecords();
+            logger.info("Finished adding Clinvar records");
             return null;
         };
         tasks.add(clinvarTask);
         Callable<Void> dbsnpTask = () -> {
             addDBSNPRecords();
+            logger.info("Finished adding DBSNP records");
             return null;
         };
         tasks.add(dbsnpTask);
         Callable<Void> exacTask = () -> {
             addExacRecords();
+            logger.info("Finished adding Exac records");
             return null;
         };
         tasks.add(exacTask);
         Callable<Void> g1kTask = () -> {
             addG1kRecords();
+            logger.info("Finished adding 1K records");
             return null;
         };
         tasks.add(g1kTask);
         Callable<Void> varEffTask = () -> {
             addVarEffectRecords();
+            logger.info("Finished adding Effect records");
             return null;
         };
         tasks.add(varEffTask);
         Callable<Void> dbnsfpTask = () -> {
             addDBNSFPRecords();
+            logger.info("Finished adding DBNSFP records");
             return null;
         };
         tasks.add(dbnsfpTask);
 
+        Callable<Void> genesTask = () -> {
+            addGeneRecord();
+            logger.info("Finished adding Genes");
+            return null;
+        };
 
+        tasks.add(genesTask);
         execService.invokeAll(tasks);
-
-
     }
 
 
@@ -252,6 +265,23 @@ public class DataLoader {
                     dbsnpRecord = record;
                     datastore.save(dbsnpRecord);
                 }
+            }
+        }
+    }
+
+    private void addGeneRecord() throws IOException {
+        Query<GeneInfo> query = datastore.createQuery(GeneInfo.class);
+        if(query.count() == 0) {
+            logger.info("Adding Gene records");
+
+            String fileName = prod ? PathUtil.join(basePath, "genes.tsv") : PathUtil.join(basePath, "genes_sample.tsv");
+
+            try(CSVParser parser = CSVFormat.TDF.withHeader().parse(Files.newBufferedReader(Paths.get(fileName)))){
+                GeneRecordConverter converter = new GeneRecordConverter();
+                for(CSVRecord record : parser.getRecords()){
+                    datastore.save(converter.convert(record, referenceDictionary));
+                }
+
             }
         }
     }
