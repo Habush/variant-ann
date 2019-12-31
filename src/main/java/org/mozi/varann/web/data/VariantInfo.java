@@ -21,7 +21,7 @@ public class VariantInfo {
     /**
      * Position of the variant, 0-based
      */
-    private int pos;
+    private long pos;
     /**
      * rs ID of the variant
      */
@@ -39,15 +39,6 @@ public class VariantInfo {
      * hgvs string
      */
     private String hgvs;
-    /**
-     * Filters, NC: inconsistent genotype submission for at least one sample
-     */
-
-
-//    /**
-//     * {@link DBSNPRecord} info about this variant
-//     */
-//    private DBSNPRecord dbsnp;
 
     /**
      * {@link DiseaseInfo} info about this variant
@@ -69,6 +60,11 @@ public class VariantInfo {
      */
     private EffectInfo effect;
 
+    /**
+     * {@link DBNSFPRecord} info about this variant
+     */
     private DBNSFPRecord scores;
+
+    private String gene;
 
 }

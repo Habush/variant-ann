@@ -248,11 +248,11 @@ public class DataLoader {
     }
 
     private void addGeneRecord() throws IOException {
-        Query<GeneInfo> query = datastore.createQuery(GeneInfo.class);
+        Query<GeneRecord> query = datastore.createQuery(GeneRecord.class);
         if(query.count() == 0) {
             logger.info("Adding Gene records");
 
-            String fileName = prod ? PathUtil.join(basePath, "genes.tsv") : PathUtil.join(basePath, "genes_sample.tsv");
+            String fileName = PathUtil.join(basePath, "genes.tsv");
 
             try(CSVParser parser = CSVFormat.TDF.withHeader().parse(Files.newBufferedReader(Paths.get(fileName)))){
                 GeneRecordConverter converter = new GeneRecordConverter();
@@ -269,14 +269,14 @@ public class DataLoader {
      * This method checks if an index exists and creates it if it doesn't
      */
     private void checkIndices() throws IOException {
-        for (int i = 0; i < indices.length; i++) {
-            GetIndexRequest getIndexRequest = new GetIndexRequest(indices[i]);
+        for (String index : indices) {
+            GetIndexRequest getIndexRequest = new GetIndexRequest(index);
             getIndexRequest.local(false);
             getIndexRequest.includeDefaults(true);
             boolean exists = client.indices().exists(getIndexRequest, RequestOptions.DEFAULT);
             if (!exists) {
-                logger.warn("The " + indices[i] + " index doesn't exist. Attempting to create it...");
-                createIndex(indices[i], client);
+                logger.warn("The " + index + " index doesn't exist. Attempting to create it...");
+                createIndex(index, client);
             }
 
         }

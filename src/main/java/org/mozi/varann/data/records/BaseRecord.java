@@ -21,7 +21,7 @@ public class BaseRecord {
      * Position of the variant, 0-based
      */
     @JsonIgnore
-    public int pos;
+    public long pos;
     /**
      * ID of the variant
      */

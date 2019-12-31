@@ -12,8 +12,8 @@ import org.bson.types.ObjectId;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class GeneInfo {
+@Entity("genes")
+public class GeneRecord {
     @Id
     @JsonIgnore
     private ObjectId _id;
@@ -22,7 +22,7 @@ public class GeneInfo {
     private String symbol;
     private String entrezId;
     private String name;
-    private String chr;
+    private String chrom;
     private long start;
     private long end;
     private String type;

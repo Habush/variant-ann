@@ -1,6 +1,7 @@
 package org.mozi.varann.web;
 
 import lombok.RequiredArgsConstructor;
+import org.mozi.varann.web.data.GeneInfo;
 import org.mozi.varann.web.data.VariantInfo;
 import org.mozi.varann.util.AnnotationException;
 import org.springframework.stereotype.Controller;
@@ -30,7 +31,7 @@ public class AnnotationController {
 
     @RequestMapping(value = "/annotate/gene/{gene}", method = RequestMethod.GET)
     @ResponseBody
-    public List<VariantInfo> annotateByGene(@PathVariable String gene, @RequestParam(value = "from", defaultValue = "0") int from, @RequestParam(value = "from", defaultValue = "10") int size) throws AnnotationException, IOException {
-        return annotationExec.annotateByGene(gene, from, size);
+    public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationException, IOException {
+        return annotationExec.annotateByGene(gene);
     }
 }

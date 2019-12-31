@@ -3,27 +3,27 @@ package org.mozi.varann.data.impl.genes;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import org.apache.commons.csv.CSVRecord;
 import org.mozi.varann.data.impl.TSVToRecordConverter;
-import org.mozi.varann.data.records.GeneInfo;
+import org.mozi.varann.data.records.GeneRecord;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
  * 12/30/19
  */
-public class GeneRecordConverter implements TSVToRecordConverter<GeneInfo, CSVRecord> {
+public class GeneRecordConverter implements TSVToRecordConverter<GeneRecord, CSVRecord> {
     @Override
-    public GeneInfo convert(CSVRecord record, ReferenceDictionary refDict) {
-        GeneInfo geneInfo = new GeneInfo();
+    public GeneRecord convert(CSVRecord record, ReferenceDictionary refDict) {
+        GeneRecord geneRecord = new GeneRecord();
 
-        geneInfo.setId(record.get("geneID"));
-        geneInfo.setEntrezId(record.get("entrezID"));
-        geneInfo.setSymbol(record.get("HGNC"));
-        geneInfo.setName(record.get("name"));
-        geneInfo.setChr(record.get("chr"));
-        geneInfo.setStart(Long.parseLong(record.get("start")));
-        geneInfo.setEnd(Long.parseLong(record.get("end")));
-        geneInfo.setType(record.get("type"));
-        geneInfo.setTranscriptCount(Integer.parseInt(record.get("transcriptCount")));
+        geneRecord.setId(record.get("geneID"));
+        geneRecord.setEntrezId(record.get("entrezID"));
+        geneRecord.setSymbol(record.get("HGNC"));
+        geneRecord.setName(record.get("name"));
+        geneRecord.setChrom(record.get("chr"));
+        geneRecord.setStart(Long.parseLong(record.get("start")));
+        geneRecord.setEnd(Long.parseLong(record.get("end")));
+        geneRecord.setType(record.get("type"));
+        geneRecord.setTranscriptCount(Integer.parseInt(record.get("transcriptCount")));
 
-        return geneInfo;
+        return geneRecord;
     }
 }

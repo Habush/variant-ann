@@ -31,7 +31,6 @@ public class VariantEffectRecord extends BaseRecord {
     /**
      dbSNP rs id
      */
-    @JsonIgnore
     public String rsId;
 
     /**

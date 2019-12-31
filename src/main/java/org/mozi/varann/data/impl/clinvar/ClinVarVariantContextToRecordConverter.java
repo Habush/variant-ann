@@ -39,7 +39,7 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 
 		for (Allele all : vc.getAlternateAlleles()){
 			builder.getAlt().add(all.getBaseString());
-			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos(), PositionType.ONE_BASED), builder.getRef(), all.getBaseString());
+			GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), (int) builder.getPos(), PositionType.ONE_BASED), builder.getRef(), all.getBaseString());
 			builder.getHgvs().add(variant.toString());
 		}
 
