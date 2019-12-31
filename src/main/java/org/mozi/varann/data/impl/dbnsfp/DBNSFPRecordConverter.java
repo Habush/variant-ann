@@ -3,6 +3,7 @@ package org.mozi.varann.data.impl.dbnsfp;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
 import de.charite.compbio.jannovar.reference.GenomeVariant;
+import de.charite.compbio.jannovar.reference.PositionType;
 import de.charite.compbio.jannovar.reference.Strand;
 import org.apache.commons.csv.CSVRecord;
 import org.mozi.varann.data.impl.TSVToRecordConverter;
@@ -28,7 +29,7 @@ public class DBNSFPRecordConverter implements TSVToRecordConverter<DBNSFPRecord,
         builder.setPos(Integer.parseInt(record.get("hg19_pos(1-based)")));
         builder.setRef(record.get("ref"));
         builder.getAlt().add(record.get("alt"));
-        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(builder.getChrom()), builder.getPos()), builder.getRef(), record.get("alt"));
+        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(builder.getChrom()), builder.getPos(), PositionType.ONE_BASED), builder.getRef(), record.get("alt"));
         builder.getHgvs().add(variant.toString());
 
         //Add scores and predictions

@@ -7,7 +7,6 @@ import de.charite.compbio.jannovar.impl.util.PathUtil;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;

@@ -7,6 +7,7 @@ import com.google.common.collect.Multimap;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.reference.GenomePosition;
 import de.charite.compbio.jannovar.reference.GenomeVariant;
+import de.charite.compbio.jannovar.reference.PositionType;
 import de.charite.compbio.jannovar.reference.Strand;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -30,7 +31,7 @@ public class VariantContextToEffectRecordConverter implements VariantContextToRe
         builder.setRef(vc.getReference().getBaseString());
         for (Allele all : vc.getAlternateAlleles()) {
             builder.getAlt().add(all.getBaseString());
-            GenomeVariant gv = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos()), builder.getRef(), all.getBaseString());
+            GenomeVariant gv = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(vc.getContig()), builder.getPos(), PositionType.ONE_BASED), builder.getRef(), all.getBaseString());
             builder.getHgvs().add(gv.toString());
         }
 
