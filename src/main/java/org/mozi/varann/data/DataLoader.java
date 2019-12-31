@@ -25,7 +25,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
-import org.mozi.varann.data.impl.dbsnp.DBSNPVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.genes.GeneRecordConverter;
@@ -87,13 +86,7 @@ public class DataLoader {
             logger.info("Finished adding Clinvar records");
             return null;
         };
-        tasks.add(clinvarTask);
-        Callable<Void> dbsnpTask = () -> {
-            addDBSNPRecords();
-            logger.info("Finished adding DBSNP records");
-            return null;
-        };
-        tasks.add(dbsnpTask);
+        tasks.add(clinvarTask);;
         Callable<Void> exacTask = () -> {
             addExacRecords();
             logger.info("Finished adding Exac records");
@@ -149,20 +142,6 @@ public class DataLoader {
                     record = recordConverter.convert(variantContext, referenceDictionary);
                     record.setPubmeds(pubMap.get(record.getAlleleId()));
                     datastore.save(record);
-                }
-            }
-        }
-    }
-
-    private void addDBSNPRecords() throws IOException {
-        Query<DBSNPRecord> query = datastore.createQuery(DBSNPRecord.class);
-        if (query.count() == 0) {
-            logger.info("Addig DBSNP Records...");
-            String fileName = prod ? PathUtil.join(basePath, "vcfs", "dbsnp.vcf.gz") : PathUtil.join(basePath, "vcfs", "dbsnp_sample.vcf");
-            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
-                DBSNPVariantContextToRecordConverter recordConverter = new DBSNPVariantContextToRecordConverter();
-                for (VariantContext variantContext : fileReader) {
-                    datastore.save(recordConverter.convert(variantContext, referenceDictionary));
                 }
             }
         }

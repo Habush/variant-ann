@@ -130,9 +130,6 @@ public class AnnotationExecutor {
                 varInfo.setHgvs(hgvs);
             }
             switch (index) {
-                case "dbsnp":
-                    setRecord(varInfo, hit);
-                    break;
                 case "clinvar":
                     var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
                     ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
