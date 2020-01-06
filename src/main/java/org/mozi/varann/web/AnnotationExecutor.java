@@ -106,16 +106,8 @@ public class AnnotationExecutor {
         long start = (Integer) hit.getSourceAsMap().get("start");
         long end = (Integer) hit.getSourceAsMap().get("end");
         String contig = (String) hit.getSourceAsMap().get("chrom");
-        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery("pos");
-        rangeQueryBuilder.gte(start);
-        rangeQueryBuilder.lte(end);
-        MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("chrom", contig);
-        SearchRequest searchRequest = new SearchRequest("clinvar", "effect", "exac", "g1k", "dbnsfp");
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(rangeQueryBuilder);
-        sourceBuilder.postFilter(matchQueryBuilder);
-        searchRequest.source(sourceBuilder);
 
+        SearchRequest searchRequest = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, contig, start, end);
         SearchResponse varResponse = client.search(searchRequest, RequestOptions.DEFAULT);
 
         if (varResponse.getHits().getTotalHits().value == 0) { //RsId not found
@@ -138,6 +130,28 @@ public class AnnotationExecutor {
         return geneInfo;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<VariantInfo> annotateByRange(String chr, long start, long end) throws IOException {
+        SearchRequest request = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, chr ,start, end);
+        var searchResponse = client.search(request, RequestOptions.DEFAULT);
+        if (searchResponse.getHits().getTotalHits().value == 0) {
+            throw new AnnotationException(String.format("Couldn't find variants in range %s:%d-%d", chr, start, end));
+        }
+
+        List<VariantInfo> varInfos = new ArrayList<>();
+        for (SearchHit varHit : searchResponse.getHits()) {
+            List<String> hgvs = ((ArrayList<String>) varHit.getSourceAsMap().get("hgvs"));
+            if (hgvs.size() > 1) {
+                for (var hgv : hgvs) {
+                    varInfos.add(setVariantGene(buildVariantInfo(varHit, hgv)));
+                }
+            } else {
+                varInfos.add(setVariantGene(buildVariantInfo(varHit, hgvs.get(0))));
+            }
+        }
+
+        return varInfos;
+    }
     private SearchRequest getSearchRequest(String[] indices, String field, String value) {
         return getSearchRequest(indices, field, value, 0, 10);
     }
@@ -151,6 +165,20 @@ public class AnnotationExecutor {
         sourceBuilder.from(from);
         sourceBuilder.size(size);
         searchRequest.source(sourceBuilder);
+        return searchRequest;
+    }
+
+    private SearchRequest getRangeRequest(String [] indices, String contig, long start, long end) {
+        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery("pos");
+        rangeQueryBuilder.gte(start);
+        rangeQueryBuilder.lte(end);
+        MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("chrom", contig);
+        SearchRequest searchRequest = new SearchRequest(indices);
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(rangeQueryBuilder);
+        sourceBuilder.postFilter(matchQueryBuilder);
+        searchRequest.source(sourceBuilder);
+
         return searchRequest;
     }
 
