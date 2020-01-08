@@ -61,9 +61,9 @@ public class VariantInfo {
     private EffectInfo effect;
 
     /**
-     * {@link DBNSFPRecord} info about this variant
+     * {@link ScoreInfo} info about this variant
      */
-    private DBNSFPRecord scores;
+    private ScoreInfo scores;
 
     private String gene;
 

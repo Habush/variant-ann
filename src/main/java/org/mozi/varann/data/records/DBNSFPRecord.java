@@ -57,7 +57,6 @@ public class DBNSFPRecord extends BaseRecord {
      * MutationTaster scores
      */
     private List<Double> mutationTaster = new ArrayList<>();
-    private List<String> mutationTasterPred = new ArrayList<>();
     /**
      * DANN scores
      */
@@ -79,7 +78,6 @@ public class DBNSFPRecord extends BaseRecord {
         this.lrt.addAll(other.getLrt());
         this.lrtPred.addAll(other.getLrtPred());
         this.mutationTaster.addAll(other.getMutationTaster());
-        this.mutationTasterPred.addAll(other.getMutationTasterPred());
         this.dann.addAll(other.getDann());
         this.vest4.addAll(other.getVest4());
     }

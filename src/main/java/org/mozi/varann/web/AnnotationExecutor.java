@@ -22,10 +22,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.mozi.varann.data.records.*;
 import org.mozi.varann.util.AnnotationException;
-import org.mozi.varann.web.data.DiseaseInfo;
-import org.mozi.varann.web.data.EffectInfo;
-import org.mozi.varann.web.data.GeneInfo;
-import org.mozi.varann.web.data.VariantInfo;
+import org.mozi.varann.web.data.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -83,7 +80,7 @@ public class AnnotationExecutor {
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationException("Couldn't find a variant with hgvs id " + hgvs);
         }
-        VariantInfo variantInfo =  buildVariantInfo(searchResponse.getHits(), hgvs);
+        VariantInfo variantInfo = buildVariantInfo(searchResponse.getHits(), hgvs);
 
         return setVariantGene(variantInfo);
     }
@@ -132,7 +129,7 @@ public class AnnotationExecutor {
 
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateByRange(String chr, long start, long end) throws IOException {
-        SearchRequest request = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, chr ,start, end);
+        SearchRequest request = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, chr, start, end);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
             throw new AnnotationException(String.format("Couldn't find variants in range %s:%d-%d", chr, start, end));
@@ -152,6 +149,7 @@ public class AnnotationExecutor {
 
         return varInfos;
     }
+
     private SearchRequest getSearchRequest(String[] indices, String field, String value) {
         return getSearchRequest(indices, field, value, 0, 10);
     }
@@ -168,7 +166,7 @@ public class AnnotationExecutor {
         return searchRequest;
     }
 
-    private SearchRequest getRangeRequest(String [] indices, String contig, long start, long end) {
+    private SearchRequest getRangeRequest(String[] indices, String contig, long start, long end) {
         RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery("pos");
         rangeQueryBuilder.gte(start);
         rangeQueryBuilder.lte(end);
@@ -226,7 +224,7 @@ public class AnnotationExecutor {
                 case "dbnsfp":
                     var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
                     DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setScores(dbnsfpRec);
+                    varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
                     break;
             }
 
@@ -281,7 +279,7 @@ public class AnnotationExecutor {
             case "dbnsfp":
                 var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
                 DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
-                varInfo.setScores(dbnsfpRec);
+                varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
                 break;
         }
 
@@ -294,8 +292,37 @@ public class AnnotationExecutor {
 
     private void setRecord(VariantInfo varInfo, SearchHit hit) {
         varInfo.setChrom((String) hit.getSourceAsMap().get("chrom"));
-        varInfo.setPos((Integer)hit.getSourceAsMap().get("pos"));
+        varInfo.setPos((Integer) hit.getSourceAsMap().get("pos"));
         varInfo.setRef((String) hit.getSourceAsMap().get("ref"));
+    }
+
+    private ScoreInfo getScoreInfo(String hgvs, DBNSFPRecord record) {
+        ScoreInfo scoreInfo = new ScoreInfo();
+        int index = record.getHgvs().indexOf(hgvs);
+        if (record.getSift() != null && record.getSift().size() > 0) {
+            scoreInfo.setSift(new PredictedScore(record.getSift().get(index), record.getSiftPred().get(index)));
+        }
+        if (record.getLrt() != null && record.getLrt().size() > 0) {
+            scoreInfo.setLrt(new PredictedScore(record.getLrt().get(index), record.getLrtPred().get(index)));
+        }
+        if (record.getPolyphen2() != null && record.getPolyphen2().size() > 0) {
+            scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2().get(index), record.getPolyphen2Pred().get(index)));
+        }
+
+        if (record.getCadd() != null && record.getCadd().size() > 0) {
+            scoreInfo.setCadd(record.getCadd().get(index));
+        }
+        if (record.getDann() != null && record.getCadd().size() > 0) {
+            scoreInfo.setDann(record.getDann().get(index));
+        }
+        if (record.getMutationTaster() != null && record.getMutationTaster().size() > 0) {
+            scoreInfo.setMutationTaster(record.getMutationTaster().get(index));
+        }
+        if (record.getVest4() != null && record.getVest4().size() > 0) {
+            scoreInfo.setVest4(record.getVest4().get(index));
+        }
+
+        return scoreInfo;
     }
 
     private GeneInfo buildGeneInfo(SearchHit hit) {
@@ -333,7 +360,7 @@ public class AnnotationExecutor {
         if (searchResponse.getHits().getTotalHits().value == 0) { //the variant is intergenic
             return variantInfo;
         }
-        String symbol =  (String) searchResponse.getHits().getAt(0).getSourceAsMap().get("symbol");
+        String symbol = (String) searchResponse.getHits().getAt(0).getSourceAsMap().get("symbol");
         variantInfo.setGene(symbol);
 
         return variantInfo;

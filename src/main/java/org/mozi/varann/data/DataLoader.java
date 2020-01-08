@@ -220,28 +220,23 @@ public class DataLoader {
 
     private void addDBNSFPRecord(String fileName, Query<DBNSFPRecord> query) throws IOException {
         try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
-             BufferedReader reader = new BufferedReader(decoder);
-             CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
+             BufferedReader reader = new BufferedReader(decoder)) {
 
             DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
             DBNSFPRecord dbnsfpRecord = null;
-            for (CSVRecord csvRecord : parser.getRecords()) {
-                DBNSFPRecord record = converter.convert(csvRecord, referenceDictionary);
-                if (dbnsfpRecord != null && record.getChrom().equals(dbnsfpRecord.getChrom())
-                        && record.getRef().equals(dbnsfpRecord.getRef()) && record.getPos() == dbnsfpRecord.getPos()) {
-                    //If it is the same variant with d/t allele just update the scores
-                    dbnsfpRecord.copy(record);
-                    UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
-                            .set("alt", dbnsfpRecord.getAlt()).set("hgvs", dbnsfpRecord.getHgvs())
-                            .set("sift", dbnsfpRecord.getSift()).set("siftPred", dbnsfpRecord.getSiftPred())
-                            .set("cadd", dbnsfpRecord.getCadd())
-                            .set("polyphen2", dbnsfpRecord.getPolyphen2()).set("polyphen2Pred", dbnsfpRecord.getPolyphen2Pred())
-                            .set("lrt", dbnsfpRecord.getLrt()).set("lrtPred", dbnsfpRecord.getLrtPred())
-                            .set("mutationTaster", dbnsfpRecord.getMutationTaster())
-                            .set("mutationTasterPred", dbnsfpRecord.getMutationTasterPred())
-                            .set("dann", dbnsfpRecord.getMutationTaster()).set("vest4", dbnsfpRecord.getVest4());
-
-                    datastore.update(query, updateOp);
+            reader.readLine(); //read the columns
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                DBNSFPRecord record = converter.convert(line, referenceDictionary);
+                if (dbnsfpRecord != null) {
+                    if (record.getChrom().equals(dbnsfpRecord.getChrom())
+                            && record.getRef().equals(dbnsfpRecord.getRef()) && record.getPos() == dbnsfpRecord.getPos()) {
+                        //If it is the same variant with d/t allele just update the scores
+                        dbnsfpRecord.copy(record);
+                    } else {
+                        datastore.save(dbnsfpRecord);
+                        dbnsfpRecord = record;
+                    }
                 } else {
                     dbnsfpRecord = record;
                     datastore.save(dbnsfpRecord);
@@ -252,14 +247,14 @@ public class DataLoader {
 
     private void addGeneRecord() throws IOException {
         Query<GeneRecord> query = datastore.createQuery(GeneRecord.class);
-        if(query.count() == 0) {
+        if (query.count() == 0) {
             logger.info("Adding Gene records");
 
             String fileName = PathUtil.join(basePath, "genes.tsv");
 
-            try(CSVParser parser = CSVFormat.TDF.withHeader().parse(Files.newBufferedReader(Paths.get(fileName)))){
+            try (CSVParser parser = CSVFormat.TDF.withHeader().parse(Files.newBufferedReader(Paths.get(fileName)))) {
                 GeneRecordConverter converter = new GeneRecordConverter();
-                for(CSVRecord record : parser.getRecords()){
+                for (CSVRecord record : parser.getRecords()) {
                     datastore.save(converter.convert(record, referenceDictionary));
                 }
 
