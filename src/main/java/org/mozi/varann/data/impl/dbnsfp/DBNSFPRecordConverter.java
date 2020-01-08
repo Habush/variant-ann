@@ -36,36 +36,29 @@ public class DBNSFPRecordConverter implements TSVToRecordConverter<DBNSFPRecord,
         Matcher matScore = patScore.matcher(record.get("SIFT_score"));
         Matcher matPred = patPred.matcher(record.get("SIFT_pred"));
         if(matScore.matches() && matPred.matches()){
-            PredictedScore siftScore = new PredictedScore();
-            siftScore.setScore(Double.parseDouble(matScore.group(2)));
-            siftScore.setPrediction(PredictedEffect.fromString(matPred.group(2)).name());
-            builder.getSift().add(siftScore);
+            builder.getSift().add(Double.parseDouble(matScore.group(2)));
+            builder.getSiftPred().add(PredictedEffect.fromString(matPred.group(2)).name());
         }
         matScore = patScore.matcher(record.get("Polyphen2_HDIV_score"));
         matPred = patPred.matcher(record.get("Polyphen2_HDIV_pred"));
         if(matScore.matches() && matPred.matches()){
-            PredictedScore polyScore = new PredictedScore();
-            polyScore.setScore(Double.parseDouble(matScore.group(2)));
-            polyScore.setPrediction(PredictedEffect.fromString(matPred.group(2)).name());
-            builder.getPolyphen2().add(polyScore);
+
+            builder.getPolyphen2().add(Double.parseDouble(matScore.group(2)));
+            builder.getPolyphen2Pred().add(PredictedEffect.fromString(matPred.group(2)).name());
         }
         matScore = patScore.matcher(record.get("LRT_score"));
         matPred = patPred.matcher(record.get("LRT_pred"));
         if(matScore.matches() && matPred.matches()){
-            PredictedScore lrtScore = new PredictedScore();
-            lrtScore.setScore(Double.parseDouble(matScore.group(2)));
-            lrtScore.setPrediction(PredictedEffect.fromString(matPred.group(2)).name());
-            builder.getLrt().add(lrtScore);
+            builder.getLrt().add(Double.parseDouble(matScore.group(2)));
+            builder.getLrtPred().add(PredictedEffect.fromString(matPred.group(2)).name());
         }
 
 
         matScore = patScore.matcher(record.get("MutationTaster_score"));
         matPred = patPred.matcher(record.get("MutationAssessor_pred"));
         if(matScore.matches() && matPred.matches()){
-            PredictedScore mutScore = new PredictedScore();
-            mutScore.setScore(Double.parseDouble(matScore.group(2)));
-            mutScore.setPrediction(PredictedEffect.fromString(matPred.group(2)).name());
-            builder.getMutationTaster().add(mutScore);
+            builder.getMutationTaster().add(Double.parseDouble(matScore.group(2)));
+            builder.getMutationTasterPred().add(PredictedEffect.fromString(matPred.group(2)).name());
         }
 
 

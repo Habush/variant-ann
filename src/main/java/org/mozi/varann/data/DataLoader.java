@@ -212,7 +212,7 @@ public class DataLoader {
                     addDBNSFPRecord(filename, query);
                 }
             } else {
-                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv"), query);
+                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv.gz"), query);
             }
         }
 
@@ -224,24 +224,27 @@ public class DataLoader {
              CSVParser parser = CSVFormat.TDF.withHeader().parse(reader)) {
 
             DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
-            DBNSFPRecord dbsnpRecord = null;
+            DBNSFPRecord dbnsfpRecord = null;
             for (CSVRecord csvRecord : parser.getRecords()) {
                 DBNSFPRecord record = converter.convert(csvRecord, referenceDictionary);
-                if (dbsnpRecord != null && record.getChrom().equals(dbsnpRecord.getChrom())
-                        && record.getRef().equals(dbsnpRecord.getRef()) && record.getPos() == dbsnpRecord.getPos()) {
+                if (dbnsfpRecord != null && record.getChrom().equals(dbnsfpRecord.getChrom())
+                        && record.getRef().equals(dbnsfpRecord.getRef()) && record.getPos() == dbnsfpRecord.getPos()) {
                     //If it is the same variant with d/t allele just update the scores
-                    dbsnpRecord.copy(record);
+                    dbnsfpRecord.copy(record);
                     UpdateOperations<DBNSFPRecord> updateOp = datastore.createUpdateOperations(DBNSFPRecord.class)
-                            .set("alt", dbsnpRecord.getAlt()).set("hgvs", dbsnpRecord.getHgvs())
-                            .set("sift", dbsnpRecord.getSift())
-                            .set("cadd", dbsnpRecord.getCadd()).set("polyphen2", dbsnpRecord.getPolyphen2())
-                            .set("lrt", dbsnpRecord.getLrt()).set("mutationTaster", dbsnpRecord.getMutationTaster())
-                            .set("dann", dbsnpRecord.getMutationTaster()).set("vest4", dbsnpRecord.getVest4());
+                            .set("alt", dbnsfpRecord.getAlt()).set("hgvs", dbnsfpRecord.getHgvs())
+                            .set("sift", dbnsfpRecord.getSift()).set("siftPred", dbnsfpRecord.getSiftPred())
+                            .set("cadd", dbnsfpRecord.getCadd())
+                            .set("polyphen2", dbnsfpRecord.getPolyphen2()).set("polyphen2Pred", dbnsfpRecord.getPolyphen2Pred())
+                            .set("lrt", dbnsfpRecord.getLrt()).set("lrtPred", dbnsfpRecord.getLrtPred())
+                            .set("mutationTaster", dbnsfpRecord.getMutationTaster())
+                            .set("mutationTasterPred", dbnsfpRecord.getMutationTasterPred())
+                            .set("dann", dbnsfpRecord.getMutationTaster()).set("vest4", dbnsfpRecord.getVest4());
 
                     datastore.update(query, updateOp);
                 } else {
-                    dbsnpRecord = record;
-                    datastore.save(dbsnpRecord);
+                    dbnsfpRecord = record;
+                    datastore.save(dbnsfpRecord);
                 }
             }
         }

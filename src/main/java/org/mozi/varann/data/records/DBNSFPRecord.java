@@ -32,7 +32,10 @@ public class DBNSFPRecord extends BaseRecord {
     /**
      * SIFT scores
      */
-    private List<PredictedScore> sift = new ArrayList<>();
+    private List<Double> sift = new ArrayList<>();
+
+    private List<String> siftPred = new ArrayList<>();
+
 
     /**
      * CADD scores
@@ -41,16 +44,20 @@ public class DBNSFPRecord extends BaseRecord {
     /**
      * PloyPhen2 scores
      */
-    private List<PredictedScore> polyphen2 = new ArrayList<>();
+    private List<Double> polyphen2 = new ArrayList<>();
+
+    private List<String> polyphen2Pred = new ArrayList<>();
 
     /**
      * LRT scores
      */
-    private List<PredictedScore> lrt = new ArrayList<>();
+    private List<Double> lrt = new ArrayList<>();
+    private List<String> lrtPred = new ArrayList<>();
     /**
      * MutationTaster scores
      */
-    private List<PredictedScore> mutationTaster = new ArrayList<>();
+    private List<Double> mutationTaster = new ArrayList<>();
+    private List<String> mutationTasterPred = new ArrayList<>();
     /**
      * DANN scores
      */
@@ -65,10 +72,14 @@ public class DBNSFPRecord extends BaseRecord {
         this.alt.addAll(other.getAlt());
         this.hgvs.addAll(other.getHgvs());
         this.sift.addAll(other.getSift());
+        this.siftPred.addAll(other.getSiftPred());
         this.cadd.addAll(other.getCadd());
         this.polyphen2.addAll(other.getPolyphen2());
+        this.polyphen2Pred.addAll(other.getPolyphen2Pred());
         this.lrt.addAll(other.getLrt());
+        this.lrtPred.addAll(other.getLrtPred());
         this.mutationTaster.addAll(other.getMutationTaster());
+        this.mutationTasterPred.addAll(other.getMutationTasterPred());
         this.dann.addAll(other.getDann());
         this.vest4.addAll(other.getVest4());
     }
