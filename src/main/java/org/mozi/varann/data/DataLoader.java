@@ -6,7 +6,6 @@ import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.impl.util.PathUtil;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.mozi.varann.data.impl.ACMGRecordConverter;
 import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
@@ -77,8 +77,13 @@ public class DataLoader {
 
     public void initData() throws IOException, InterruptedException {
         checkIndices();
+
+        Thread.setDefaultUncaughtExceptionHandler( (t, e) -> {
+            logger.error(e);
+        });
+
         logger.info("Loading records");
-        ExecutorService execService = Executors.newFixedThreadPool(7);
+        ExecutorService execService = Executors.newFixedThreadPool(8);
         List<Callable<Void>> tasks = new ArrayList<>();
         ;
         Callable<Void> clinvarTask = () -> {
@@ -111,6 +116,13 @@ public class DataLoader {
             return null;
         };
         tasks.add(dbnsfpTask);
+
+        Callable<Void> acmgTask = () -> {
+            addACMGRecords();
+            logger.info("Finished adding ACMG Records");
+            return null;
+        };
+        tasks.add(acmgTask);
 
         Callable<Void> genesTask = () -> {
             addGeneRecord();
@@ -203,22 +215,22 @@ public class DataLoader {
                 for (int i = 1; i < 23; i++) {
                     logger.info("Adding Records for chr" + i);
                     String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", i));
-                    addDBNSFPRecord(filename, query);
+                    addDBNSFPRecord(filename);
                 }
                 //Add chr X, Y, M
                 for (String chr : chrs) {
                     logger.info("Adding Records for chr" + chr);
-                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", chr));
-                    addDBNSFPRecord(filename, query);
+                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%s.gz", chr));
+                    addDBNSFPRecord(filename);
                 }
             } else {
-                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv.gz"), query);
+                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv.gz"));
             }
         }
 
     }
 
-    private void addDBNSFPRecord(String fileName, Query<DBNSFPRecord> query) throws IOException {
+    private void addDBNSFPRecord(String fileName) throws IOException {
         try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
              BufferedReader reader = new BufferedReader(decoder)) {
 
@@ -262,6 +274,24 @@ public class DataLoader {
         }
     }
 
+    private void addACMGRecords() throws IOException {
+        Query<ACMGRecord> query = datastore.createQuery(ACMGRecord.class);
+        if(query.count() == 0){
+            String fileName = prod ? PathUtil.join(basePath, "vcfs", "intervar_multianno.tsv.gz") : PathUtil.join(basePath, "vcfs", "demo_intervar.tsv.gz");
+            try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
+                 BufferedReader reader = new BufferedReader(decoder)) {
+                logger.info("Adding ACMG Records");
+
+                ACMGRecordConverter converter = new ACMGRecordConverter();
+                reader.readLine(); //read the columns
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    datastore.save(converter.convert(line, referenceDictionary));
+                }
+            }
+        }
+    }
+
 
     /**
      * This method checks if an index exists and creates it if it doesn't
@@ -276,7 +306,6 @@ public class DataLoader {
                 logger.warn("The " + index + " index doesn't exist. Attempting to create it...");
                 createIndex(index, client);
             }
-
         }
 
     }

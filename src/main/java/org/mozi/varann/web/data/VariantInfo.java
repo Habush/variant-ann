@@ -67,4 +67,6 @@ public class VariantInfo {
 
     private String gene;
 
+    private ACMGRecord acmg;
+
 }

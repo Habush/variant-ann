@@ -226,6 +226,10 @@ public class AnnotationExecutor {
                     DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
                     varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
                     break;
+                case "acmg":
+                    var acmgQuery = datastore.createQuery(ACMGRecord.class);
+                    ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
+                    varInfo.setAcmg(acmgRecord);
             }
 
             if (varInfo.getRef() == null) {
@@ -281,6 +285,10 @@ public class AnnotationExecutor {
                 DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
                 varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
                 break;
+            case "acmg":
+                var acmgQuery = datastore.createQuery(ACMGRecord.class);
+                ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
+                varInfo.setAcmg(acmgRecord);
         }
 
         if (varInfo.getRef() == null) {
