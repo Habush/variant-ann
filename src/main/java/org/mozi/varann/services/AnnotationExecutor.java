@@ -1,4 +1,4 @@
-package org.mozi.varann.web;
+package org.mozi.varann.services;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -9,6 +9,8 @@ import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import dev.morphia.Datastore;
 import lombok.RequiredArgsConstructor;
 import lombok.var;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -24,11 +26,13 @@ import org.mozi.varann.data.records.*;
 import org.mozi.varann.util.AnnotationException;
 import org.mozi.varann.web.data.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class executes the annotation request
@@ -41,11 +45,10 @@ public class AnnotationExecutor {
 
     private final Datastore datastore;
 
-    private final ReferenceDictionary refDict;
-
     @Value("${indices}")
     private String[] indices;
 
+    private static final Logger logger = LogManager.getLogger(AnnotationExecutor.class);
     @SuppressWarnings("unchecked")
     public VariantInfo annotateId(String id) throws AnnotationException, IOException {
         if (id.contains("rs")) {
@@ -83,6 +86,20 @@ public class AnnotationExecutor {
         VariantInfo variantInfo = buildVariantInfo(searchResponse.getHits(), hgvs);
 
         return setVariantGene(variantInfo);
+    }
+
+    /**
+     * Asynchronously annotate a list of variants
+     */
+    @Async
+    public CompletableFuture<List<VariantInfo>> annotateMultipleVariants(List<String> ids) throws AnnotationException, IOException {
+        logger.info(String.format("Received %d variants", ids.size()));
+        List<VariantInfo> result = new ArrayList<>();
+        for(String id: ids){
+            result.add(annotateId(id));
+        }
+
+        return CompletableFuture.completedFuture(result);
     }
 
     @SuppressWarnings("unchecked")

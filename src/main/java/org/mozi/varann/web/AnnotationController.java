@@ -1,6 +1,9 @@
 package org.mozi.varann.web;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.mozi.varann.services.AnnotationExecutor;
 import org.mozi.varann.util.AnnotationException;
 import org.mozi.varann.web.data.GeneInfo;
 import org.mozi.varann.web.data.VariantInfo;
@@ -8,7 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +23,7 @@ public class AnnotationController {
 
     private static final Pattern pat = Pattern.compile("(chr)?(\\d+):(\\d+)-(\\d+)");
     private final AnnotationExecutor annotationExec;
+    private static final Logger logger = LogManager.getLogger(AnnotationController.class);
 
     @RequestMapping(value = "/annotate/{id}", method = RequestMethod.GET)
     @ResponseBody
@@ -29,6 +35,13 @@ public class AnnotationController {
     @ResponseBody
     public VariantInfo annotateByHgvs(@RequestParam(value = "hgvs") String hgvs) throws AnnotationException, IOException {
         return annotationExec.annotateHgvs(hgvs);
+    }
+
+    @RequestMapping(value = "/annotate-multi", method = RequestMethod.GET)
+    @ResponseBody
+    public CompletableFuture<List<VariantInfo>> annotateVariants(@RequestBody ArrayList<String> ids) throws IOException {
+        logger.info("Starting multiple variant annotation");
+        return annotationExec.annotateMultipleVariants(ids);
     }
 
     @RequestMapping(value = "/annotate/range/", method = RequestMethod.GET)
