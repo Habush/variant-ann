@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
  * 1/13/20
@@ -25,6 +27,7 @@ public class ACMGRecord extends BaseRecord {
 
     private String verdict;
 
+    //Evidences
     private int pvs1;
     private int[] ps;
     private int[] pm;
@@ -33,4 +36,8 @@ public class ACMGRecord extends BaseRecord {
     private int[] bs;
     private int[] bp;
 
+    //Additional Info
+
+    private String exonicFunction;
+    private List<OrphaDiseaseInfo> diseaseInfos;
 }

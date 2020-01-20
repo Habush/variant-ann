@@ -6,8 +6,11 @@ import de.charite.compbio.jannovar.reference.GenomeVariant;
 import de.charite.compbio.jannovar.reference.PositionType;
 import de.charite.compbio.jannovar.reference.Strand;
 import org.mozi.varann.data.records.ACMGRecord;
+import org.mozi.varann.data.records.OrphaDiseaseInfo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -61,6 +64,23 @@ public class ACMGRecordConverter implements TSVToRecordConverter<ACMGRecord, Str
 
             }
         }
+
+        //Exonic Function
+        builder.setExonicFunction(records[7]);
+
+        //Orpha info
+        String[] orphaInfo = records[33].split("~");
+
+        List<OrphaDiseaseInfo> orphaDiseaseInfos = new ArrayList<>();
+        for(String info : orphaInfo) {
+            String[] details = info.split("\\|");
+            OrphaDiseaseInfo diseaseInfo = new OrphaDiseaseInfo(details[0], details[1],
+                    details[2], details[3], details[4], details[5].split(" "));
+            orphaDiseaseInfos.add(diseaseInfo);
+        }
+
+        builder.setDiseaseInfos(orphaDiseaseInfos);
+
 
         return builder;
     }
