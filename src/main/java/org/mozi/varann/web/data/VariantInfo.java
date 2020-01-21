@@ -43,7 +43,7 @@ public class VariantInfo {
     /**
      * {@link DiseaseInfo} info about this variant
      */
-    private DiseaseInfo disease;
+    private DiseaseInfo clinvar;
 
     /**
      * {@link ThousandGenomesRecord} info about this variant

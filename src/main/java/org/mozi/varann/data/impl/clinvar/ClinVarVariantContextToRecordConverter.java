@@ -43,10 +43,6 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 			builder.getHgvs().add(variant.toString());
 		}
 
-		// Fields from INFO VCF field
-
-		int alleleSize = vc.getAlternateAlleles().size();
-
 		// Create shortcuts to allele-wise lists of the INFO atributes we will try to interpret
 		List<Object> hgvs = vc.getAttributeAsList("CLNHGVS");
 		List<Object> clnOrigin = vc.getAttributeAsList("ORIGIN");
@@ -58,8 +54,7 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 		List<Object> clnDiseaseDbId = vc.getAttributeAsList("CLNDISDB");
 		List<Object> clnDiseaseDbName = vc.getAttributeAsList("CLNDN");
 		List<Object> clnRevStat = vc.getAttributeAsList("CLNREVSTAT");
-		Multimap<String, ClinVarAnnotation> annotationMap = ArrayListMultimap.create();
-		for (int idx = 0; idx < alleleSize; ++idx) {
+		for (int idx = 0; idx < builder.getHgvs().size(); ++idx) {
 			// Construct annotation builder
 			ClinVarAnnotation annoBuilder = new ClinVarAnnotation();
 			// One element: CLNHGVS, CLNORIGIN
@@ -114,10 +109,8 @@ public class ClinVarVariantContextToRecordConverter implements VariantContextToR
 
 			}
 
-			annotationMap.put(vc.getAlternateAllele(idx).getBaseString(), annoBuilder);
+			builder.getAnnotations().add(annoBuilder);
 		}
-
-		builder.setAnnotations(Maps.newHashMap(annotationMap.asMap()));
 
 		return builder;
 	}

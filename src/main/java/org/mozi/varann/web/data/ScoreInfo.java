@@ -15,8 +15,8 @@ public class ScoreInfo {
     private PredictedScore polyphen2;
     private PredictedScore lrt;
 
-    private double cadd;
-    private double mutationTaster;
-    private double dann;
-    private double vest4;
+    private PredictedScore cadd;
+    private PredictedScore mutationTaster;
+    private PredictedScore dann;
+    private PredictedScore vest4;
 }

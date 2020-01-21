@@ -44,6 +44,9 @@ public class ThousandGenomesRecord extends BaseRecord {
 	 */
 	private HashMap<ThousandGenomesPopulation, List<Double>> alleleFrequencies = new HashMap<>();
 
+	private HashMap<ThousandGenomesPopulation, List<Integer>> alleleCounts = new HashMap<>();
+	private HashMap<ThousandGenomesPopulation, List<Integer>> chromCounts = new HashMap<>();
+
 
 	/**
 	 * @return {@link ThousandGenomesPopulation} with highest allele frequency for the given allele index (0 is first alternative

@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 public class DiseaseInfo {
 
-    private Collection<ClinVarAnnotation> clinvar;
+    private ClinVarAnnotation annotation;
 
     private Collection<String> pumeds;
 }

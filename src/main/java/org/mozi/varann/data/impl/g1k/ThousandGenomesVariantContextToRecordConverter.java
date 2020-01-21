@@ -11,6 +11,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import org.mozi.varann.data.impl.VariantContextToRecordConverter;
 import org.mozi.varann.data.records.ThousandGenomesRecord;
 
+import java.util.List;
+
 /**
  * Helper class for the conversion of {@link VariantContext} to {@link ThousandGenomesRecord} objects
  *
@@ -48,6 +50,13 @@ public class ThousandGenomesVariantContextToRecordConverter implements VariantCo
 		builder.getAlleleFrequencies().put(ThousandGenomesPopulation.ASN, Lists.newArrayList(asnFreq));
 		builder.getAlleleFrequencies().put(ThousandGenomesPopulation.EUR, Lists.newArrayList(eurFreq));
 		builder.getAlleleFrequencies().put(ThousandGenomesPopulation.ALL, Lists.newArrayList(allFreq));
+
+
+		int alleleCount = vc.getAttributeAsInt("AC", 0);
+		int chromCount = vc.getAttributeAsInt("AN", 0);
+
+		builder.getAlleleCounts().put(ThousandGenomesPopulation.ALL, Lists.newArrayList(alleleCount));
+		builder.getChromCounts().put(ThousandGenomesPopulation.ALL, Lists.newArrayList(chromCount));
 
 		return builder;
 	}

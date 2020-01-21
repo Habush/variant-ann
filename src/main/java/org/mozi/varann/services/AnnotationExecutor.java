@@ -214,9 +214,9 @@ public class AnnotationExecutor {
                     var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
                     ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
                     DiseaseInfo diseaseInfonfo = new DiseaseInfo();
-                    diseaseInfonfo.setClinvar(clinvarRec.getAnnotations().get(alt));
+                    diseaseInfonfo.setAnnotation(clinvarRec.getAnnotations().get(hgvsIndex));
                     diseaseInfonfo.setPumeds(clinvarRec.getPubmeds());
-                    varInfo.setDisease(diseaseInfonfo);
+                    varInfo.setClinvar(diseaseInfonfo);
                     break;
                 case "exac":
                     var exacQuery = datastore.createQuery(ExacRecord.class);
@@ -273,9 +273,9 @@ public class AnnotationExecutor {
                 var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
                 ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
                 DiseaseInfo diseaseInfonfo = new DiseaseInfo();
-                diseaseInfonfo.setClinvar(clinvarRec.getAnnotations().get(alt));
+                diseaseInfonfo.setAnnotation(clinvarRec.getAnnotations().get(hgvsIndex));
                 diseaseInfonfo.setPumeds(clinvarRec.getPubmeds());
-                varInfo.setDisease(diseaseInfonfo);
+                varInfo.setClinvar(diseaseInfonfo);
                 break;
             case "exac":
                 var exacQuery = datastore.createQuery(ExacRecord.class);
@@ -335,16 +335,16 @@ public class AnnotationExecutor {
         }
 
         if (record.getCadd() != null && record.getCadd().size() > 0) {
-            scoreInfo.setCadd(record.getCadd().get(index));
+            scoreInfo.setCadd(new PredictedScore(record.getCadd().get(index), null));
         }
         if (record.getDann() != null && record.getCadd().size() > 0) {
-            scoreInfo.setDann(record.getDann().get(index));
+            scoreInfo.setDann(new PredictedScore(record.getDann().get(index), null));
         }
         if (record.getMutationTaster() != null && record.getMutationTaster().size() > 0) {
-            scoreInfo.setMutationTaster(record.getMutationTaster().get(index));
+            scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster().get(index), null));
         }
         if (record.getVest4() != null && record.getVest4().size() > 0) {
-            scoreInfo.setVest4(record.getVest4().get(index));
+            scoreInfo.setVest4(new PredictedScore(record.getVest4().get(index), null));
         }
 
         return scoreInfo;

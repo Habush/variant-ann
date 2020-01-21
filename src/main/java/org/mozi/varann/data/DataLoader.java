@@ -141,7 +141,7 @@ public class DataLoader {
             logger.info("Adding Clinvar Records...");
             String fileName = prod ? PathUtil.join(basePath, "vcfs", "clinvar.vcf.gz") : PathUtil.join(basePath, "vcfs", "clinvar_sample.vcf");
             try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);
-                 BufferedReader reader = new BufferedReader(new FileReader(PathUtil.join(basePath, "vcfs", "var_citations.txt"))
+                 BufferedReader reader = new BufferedReader(new FileReader(PathUtil.join(basePath, "vcfs", "var_citations.tsv"))
                  )) {
                 Multimap<String, String> pubMap = ArrayListMultimap.create();
                 reader.lines().forEach(s -> {
