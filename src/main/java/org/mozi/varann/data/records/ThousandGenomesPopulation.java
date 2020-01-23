@@ -1,4 +1,4 @@
-package org.mozi.varann.data.impl.g1k;
+package org.mozi.varann.data.records;
 
 /**
  * Enum type for populations in the thousand genomes data set
@@ -9,35 +9,35 @@ public enum ThousandGenomesPopulation {
 	/**
 	 * African/African American
 	 */
-	AFR,
+	afr,
 	/**
 	 * American
 	 */
-	AMR,
+	amr,
 	/**
 	 * Asian
 	 */
-	ASN,
+	asn,
 	/**
 	 * European
 	 */
-	EUR,
+	eur,
 	/**
 	 * Pseudo-population meaning "all pooled together"
 	 */
-	ALL;
+	all;
 
 	public String getLabel() {
 		switch (this) {
-			case AFR:
+			case afr:
 				return "African/African American";
-			case AMR:
+			case amr:
 				return "American";
-			case ASN:
+			case asn:
 				return "Asian";
-			case EUR:
+			case eur:
 				return "European";
-			case ALL:
+			case all:
 				return "All";
 			default:
 				return "Undefined";

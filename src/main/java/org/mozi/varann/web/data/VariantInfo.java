@@ -8,6 +8,8 @@ package org.mozi.varann.web.data;
 import lombok.Data;
 import org.mozi.varann.data.records.*;
 
+import java.util.HashMap;
+
 /**
  * An aggregator class that holds the info about a variant from all dbs
  */
@@ -45,15 +47,7 @@ public class VariantInfo {
      */
     private DiseaseInfo clinvar;
 
-    /**
-     * {@link ThousandGenomesRecord} info about this variant
-     */
-    private ThousandGenomesRecord thousandGenome;
-
-    /**
-     * {@link ExacRecord} info about this variant
-     */
-    private ExacRecord exac;
+    private HashMap<String, PopulationInfo> population = new HashMap<>();
 
     /**
      * {@link EffectInfo} info about this variant

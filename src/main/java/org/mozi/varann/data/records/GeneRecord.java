@@ -20,7 +20,7 @@ public class GeneRecord {
 
     private String id;
     private String symbol;
-    private String entrezId;
+    private String entrezID;
     private String name;
     private String chrom;
     private long start;

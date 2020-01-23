@@ -22,6 +22,7 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.ACMGRecordConverter;
+import org.mozi.varann.data.impl.gnomad.GnomadExomeRecordConverter;
 import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
@@ -129,8 +130,16 @@ public class DataLoader {
             logger.info("Finished adding Genes");
             return null;
         };
-
         tasks.add(genesTask);
+
+        Callable<Void> gnomadTask = () -> {
+            addGnomadExomeRecords();
+            logger.info("Finished adding Gnomad records");
+            return null;
+        };
+
+        tasks.add(gnomadTask);
+
         execService.invokeAll(tasks);
     }
 
@@ -169,6 +178,21 @@ public class DataLoader {
                 for (VariantContext variantContext : fileReader) {
                     datastore.save(recordConverter.convert(variantContext, referenceDictionary));
                 }
+            }
+        }
+    }
+
+    private void addGnomadExomeRecords() throws IOException {
+        Query<GnomadExomeRecord> query = datastore.createQuery(GnomadExomeRecord.class);
+        if(query.count() == 0) {
+            logger.info("Adding Gnomad Exome Records");
+            String fileName = prod ?  PathUtil.join(basePath, "vcfs", "gnomad_exomes.vcf.gz") : PathUtil.join(basePath, "vcfs", "gnomad_exomes_sample.vcf.gz");
+            try(VCFFileReader fileReader = new VCFFileReader(new File(fileName), false)) {
+                GnomadExomeRecordConverter recordConverter = new GnomadExomeRecordConverter();
+                for(VariantContext vc : fileReader) {
+                    datastore.save(recordConverter.convert(vc, referenceDictionary));
+                }
+
             }
         }
     }

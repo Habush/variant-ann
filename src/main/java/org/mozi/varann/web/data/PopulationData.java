@@ -2,7 +2,6 @@ package org.mozi.varann.web.data;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.mozi.varann.data.records.ThousandGenomesRecord;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -10,8 +9,9 @@ import org.mozi.varann.data.records.ThousandGenomesRecord;
  */
 @Data
 @NoArgsConstructor
-public class PopulationInfo {
-    private PopulationData thousandGenome;
-    private PopulationData exac;
-    private PopulationData gnomadExome;
+public class PopulationData {
+    private int AC;
+    private int AN;
+    private double AF;
+    private int homAlt;
 }

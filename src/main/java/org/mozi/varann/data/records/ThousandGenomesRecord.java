@@ -1,7 +1,6 @@
 package org.mozi.varann.data.records;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
@@ -9,7 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
-import org.mozi.varann.data.impl.g1k.ThousandGenomesPopulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,41 +43,5 @@ public class ThousandGenomesRecord extends BaseRecord {
 	private HashMap<ThousandGenomesPopulation, List<Double>> alleleFrequencies = new HashMap<>();
 
 	private HashMap<ThousandGenomesPopulation, List<Integer>> alleleCounts = new HashMap<>();
-	private HashMap<ThousandGenomesPopulation, List<Integer>> chromCounts = new HashMap<>();
-
-
-	/**
-	 * @return {@link ThousandGenomesPopulation} with highest allele frequency for the given allele index (0 is first alternative
-	 * allele)
-	 */
-	public ThousandGenomesPopulation popWithHighestAlleleFreq(int alleleNo) {
-		double bestFreq = -1;
-		ThousandGenomesPopulation bestPop = ThousandGenomesPopulation.ALL;
-		for (ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()) {
-			if (alleleFrequencies.get(pop) != null && alleleNo < alleleFrequencies.get(pop).size()
-				&& alleleFrequencies.get(pop).get(alleleNo) > bestFreq) {
-				bestFreq = alleleFrequencies.get(pop).get(alleleNo);
-				bestPop = pop;
-			}
-		}
-		return bestPop;
-	}
-
-	/**
-	 * @return Highest frequency of the given allele, 0 is first alternative allele
-	 */
-	public double highestAlleleFreq(int alleleNo) {
-		return getAlleleFrequencies().get(popWithHighestAlleleFreq(alleleNo)).get(alleleNo);
-	}
-
-	/**
-	 * @return Highest frequency of any allele in any population
-	 */
-	public double highestAlleleFreqOverall() {
-		double maxAlleleFreq = 0;
-		for (int alleleNo = 0; alleleNo < alt.size(); ++alleleNo)
-			maxAlleleFreq = Math.max(maxAlleleFreq,
-					getAlleleFrequencies().get(popWithHighestAlleleFreq(alleleNo)).get(alleleNo));
-		return maxAlleleFreq;
-	}
+	private HashMap<ThousandGenomesPopulation, Integer> chromCounts = new HashMap<>();
 }

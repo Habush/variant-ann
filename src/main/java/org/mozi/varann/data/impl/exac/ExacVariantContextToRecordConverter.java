@@ -9,7 +9,9 @@ import de.charite.compbio.jannovar.reference.Strand;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.mozi.varann.data.impl.VariantContextToRecordConverter;
+import org.mozi.varann.data.records.ExacPopulation;
 import org.mozi.varann.data.records.ExacRecord;
+import org.mozi.varann.data.records.GnomadExomePopulation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +40,12 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			builder.getHgvs().add(variant.toString());
 		}
 
-		builder.getFilter().addAll(vc.getFilters());
-
 		// Fields from INFO VCF field
 
 		// AN: Chromosome count
 		int allAN = 0;
 		for (ExacPopulation pop : ExacPopulation.values()) {
-			if (pop == ExacPopulation.ALL)
+			if (pop == ExacPopulation.all)
 				continue; // skip
 
 			int an = vc.getAttributeAsInt("AN_" + pop, 0);
@@ -53,7 +53,10 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			for (int i = 0; i < vc.getAlternateAlleles().size(); ++i)
 				allAN += an;
 		}
-		builder.getChromCounts().put(ExacPopulation.ALL, allAN);
+		builder.getChromCounts().put(ExacPopulation.all, allAN);
+
+		//AF: Alternate allele frequency
+
 
 		// AC: Alternative allele count (+ het, hom,hemi)
 		ArrayList<Integer> allAC = new ArrayList<>();
@@ -67,11 +70,11 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			allHemi.add(0);
 		}
 		for (ExacPopulation pop : ExacPopulation.values()) {
-			if (pop == ExacPopulation.ALL)
+			if (pop == ExacPopulation.all)
 				continue; // skip
 
 			// AC
-			List<Integer> lst = vc.getAttributeAsList("AC_" + pop).stream().map(x -> Integer.parseInt((String) x))
+			List<Integer> lst = vc.getAttributeAsList("AC_" + pop.name().toUpperCase()).stream().map(x -> Integer.parseInt((String) x))
 				.collect(Collectors.toList());
 			if (!lst.isEmpty()) {
 				builder.getAlleleCounts().put(pop, lst);
@@ -80,7 +83,7 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			}
 
 			// Het
-			lst = vc.getAttributeAsList("Het_" + pop).stream().map(x -> Integer.parseInt((String) x))
+			lst = vc.getAttributeAsList("Het_" + pop.name().toUpperCase()).stream().map(x -> Integer.parseInt((String) x))
 				.collect(Collectors.toList());
 			if (!lst.isEmpty()) {
 				builder.getAlleleHetCounts().put(pop, lst);
@@ -89,7 +92,7 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			}
 
 			// Hom
-			lst = vc.getAttributeAsList("Hom_" + pop).stream().map(x -> Integer.parseInt((String) x))
+			lst = vc.getAttributeAsList("Hom_" + pop.name().toUpperCase()).stream().map(x -> Integer.parseInt((String) x))
 				.collect(Collectors.toList());
 			if (!lst.isEmpty()) {
 				builder.getAlleleHomCounts().put(pop, lst);
@@ -98,7 +101,7 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 			}
 
 			// Hemi
-			lst = vc.getAttributeAsList("Hemi_" + pop).stream().map(x -> Integer.parseInt((String) x))
+			lst = vc.getAttributeAsList("Hemi_" + pop.name().toUpperCase()).stream().map(x -> Integer.parseInt((String) x))
 				.collect(Collectors.toList());
 			if (!lst.isEmpty()) {
 				builder.getAlleleHemiCounts().put(pop, lst);
@@ -106,13 +109,13 @@ public class ExacVariantContextToRecordConverter implements VariantContextToReco
 					allHemi.set(i, allHemi.get(i) + lst.get(i));
 			}
 		}
-		builder.getAlleleCounts().put(ExacPopulation.ALL, allAC);
+		builder.getAlleleCounts().put(ExacPopulation.all, allAC);
 		if (!builder.getAlleleHetCounts().isEmpty())
-			builder.getAlleleHetCounts().put(ExacPopulation.ALL, allHet);
+			builder.getAlleleHetCounts().put(ExacPopulation.all, allHet);
 		if (!builder.getAlleleHomCounts().isEmpty())
-			builder.getAlleleHomCounts().put(ExacPopulation.ALL, allHom);
+			builder.getAlleleHomCounts().put(ExacPopulation.all, allHom);
 		if (!builder.getAlleleHemiCounts().isEmpty())
-			builder.getAlleleHemiCounts().put(ExacPopulation.ALL, allHemi);
+			builder.getAlleleHemiCounts().put(ExacPopulation.all, allHemi);
 
 		return builder;
 	}

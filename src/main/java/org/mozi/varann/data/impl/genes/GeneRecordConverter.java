@@ -15,7 +15,7 @@ public class GeneRecordConverter implements TSVToRecordConverter<GeneRecord, CSV
         GeneRecord geneRecord = new GeneRecord();
 
         geneRecord.setId(record.get("geneID"));
-        geneRecord.setEntrezId(record.get("entrezID"));
+        geneRecord.setEntrezID(record.get("entrezID"));
         geneRecord.setSymbol(record.get("HGNC"));
         geneRecord.setName(record.get("name"));
         geneRecord.setChrom(record.get("chr"));

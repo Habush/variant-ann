@@ -1,4 +1,4 @@
-package org.mozi.varann.data.impl.exac;
+package org.mozi.varann.data.records;
 
 /**
  * Enum type for populations in the ExAC data set
@@ -9,51 +9,53 @@ public enum ExacPopulation {
 	/**
 	 * African/African American
 	 */
-	AFR,
+	afr,
 	/**
 	 * American
 	 */
-	AMR,
+	amr,
 	/**
 	 * East Asian
 	 */
-	EAS,
+	eas,
 	/**
 	 * Finish
 	 */
-	FIN,
+	fin,
 	/**
 	 * Non-Finnish European
 	 */
-	NFE,
+	nfe,
 	/**
 	 * Other population
 	 */
-	OTH,
+	oth,
 	/**
 	 * South asian population
 	 */
-	SAS,
+	sas,
 	/**
 	 * Pseudo-population meaning "all pooled together"
 	 */
-	ALL;
+	all;
 
 	public String getLabel() {
 		switch (this) {
-			case AFR:
+			case afr:
 				return "African/African American";
-			case AMR:
+			case amr:
 				return "American";
-			case FIN:
+			case fin:
 				return "Finnish";
-			case NFE:
+			case nfe:
 				return "Non-Finnish European";
-			case OTH:
+			case oth:
 				return "Other";
-			case SAS:
+			case sas:
 				return "South Asian";
-			case ALL:
+			case eas:
+				return "East Asian";
+			case all:
 				return "All";
 			default:
 				return "Undefined";

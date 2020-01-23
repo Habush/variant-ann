@@ -5,6 +5,7 @@ package org.mozi.varann.services;
  * 12/18/19
  */
 
+import com.google.common.base.Joiner;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import dev.morphia.Datastore;
 import lombok.RequiredArgsConstructor;
@@ -102,30 +103,76 @@ public class AnnotationExecutor {
         return CompletableFuture.completedFuture(result);
     }
 
-    @SuppressWarnings("unchecked")
     public GeneInfo annotateByGene(String gene) throws AnnotationException, IOException {
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "symbol", gene), RequestOptions.DEFAULT);
 
-        if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
+        int totalHits = (int)searchResponse.getHits().getTotalHits().value;
+        if (totalHits == 0) { //RsId not found
             throw new AnnotationException("Couldn't find a gene with symbol " + gene);
         }
 
-        if (searchResponse.getHits().getTotalHits().value > 1) {
-            throw new AnnotationException("Found more than one gene for symbol " + gene);
+        if (totalHits > 1) {
+            String[] idBuf = new String[totalHits];
+            for(int i = 0; i < totalHits; i++) {
+                idBuf[i] =  (String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id");
+            }
+            String msg = String.format("Found more than one gene for symbol %s with the following ids: %s", gene, Joiner.on(",").join(idBuf));
+            throw new AnnotationException(msg);
         }
 
-        List<VariantInfo> varInfos = new ArrayList<>();
+        return getGeneInfo(gene, searchResponse);
+    }
 
+    public GeneInfo annotateByEntrezId(String entrezId) throws AnnotationException, IOException {
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "entrezID", entrezId), RequestOptions.DEFAULT);
+
+        int totalHits = (int)searchResponse.getHits().getTotalHits().value;
+        if (totalHits == 0) { //RsId not found
+            throw new AnnotationException("Couldn't find a gene with entrezID " + entrezId);
+        }
+
+        if (totalHits > 1) {
+            String[] idBuf = new String[totalHits];
+            for(int i = 0; i < totalHits; i++) {
+                idBuf[i] =  (String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id");
+            }
+            String msg = String.format("Found more than one gene for entrezID %s with the following ids: %s", entrezId, Joiner.on(",").join(idBuf));
+            throw new AnnotationException(msg);
+        }
+        return getGeneInfo(entrezId, searchResponse);
+    }
+
+    public GeneInfo annotateGeneById(String id) throws AnnotationException, IOException {
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "id", id), RequestOptions.DEFAULT);
+
+        int totalHits = (int)searchResponse.getHits().getTotalHits().value;
+        if (totalHits == 0) { //RsId not found
+            throw new AnnotationException("Couldn't find a gene with ensemble id " + id);
+        }
+
+        if (totalHits > 1) {
+            //TODO this needs to improved!
+           //Just get the first id and use that
+            return getGeneInfo((String) searchResponse.getHits().getAt(0).getSourceAsMap().get("id"), searchResponse);
+        }
+        return getGeneInfo(id, searchResponse);
+    }
+
+
+
+    @SuppressWarnings("unchecked")
+    private GeneInfo getGeneInfo(String entrezId, SearchResponse searchResponse) throws IOException {
+        List<VariantInfo> varInfos = new ArrayList<>();
         SearchHit hit = searchResponse.getHits().getAt(0);
         long start = (Integer) hit.getSourceAsMap().get("start");
         long end = (Integer) hit.getSourceAsMap().get("end");
         String contig = (String) hit.getSourceAsMap().get("chrom");
 
-        SearchRequest searchRequest = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, contig, start, end);
+        SearchRequest searchRequest = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp", "gnomad_exome", "acmg", }, contig, start, end);
         SearchResponse varResponse = client.search(searchRequest, RequestOptions.DEFAULT);
 
         if (varResponse.getHits().getTotalHits().value == 0) { //RsId not found
-            throw new AnnotationException("Couldn't find a variants for gene " + gene);
+            throw new AnnotationException("Couldn't find a variants for gene " + entrezId);
         }
         for (SearchHit varHit : varResponse.getHits()) {
             List<String> hgvs = ((ArrayList<String>) varHit.getSourceAsMap().get("hgvs"));
@@ -221,7 +268,18 @@ public class AnnotationExecutor {
                 case "exac":
                     var exacQuery = datastore.createQuery(ExacRecord.class);
                     ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setExac(exacRec);
+                    for(ExacPopulation pop : ExacPopulation.values()){
+                        PopulationData data = new PopulationData();
+                        data.setAC(exacRec.getAlleleCounts().containsKey(pop) ? exacRec.getAlleleCounts().get(pop).get(hgvsIndex): -1);
+                        data.setAF(exacRec.getAlleleFrequencies().containsKey(pop) ? exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
+                        data.setAN(exacRec.getChromCounts().getOrDefault(pop, -1));
+                        data.setHomAlt(exacRec.getAlleleHomCounts().containsKey(pop) ? exacRec.getAlleleHomCounts().get(pop).get(hgvsIndex) : -1);
+                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                            PopulationInfo info = new PopulationInfo();
+                            varInfo.getPopulation().put(pop.name(), info);
+                        }
+                        varInfo.getPopulation().get(pop.name()).setExac(data);
+                    }
                     break;
                 case "effect":
                     var effectQuery = datastore.createQuery(VariantEffectRecord.class);
@@ -236,7 +294,17 @@ public class AnnotationExecutor {
                 case "g1k":
                     var g1kQuery = datastore.createQuery(ThousandGenomesRecord.class);
                     ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setThousandGenome(g1kRec);
+                    for(ThousandGenomesPopulation pop: ThousandGenomesPopulation.values()){
+                        PopulationData data = new PopulationData();
+                        data.setAC(g1kRec.getAlleleCounts().containsKey(pop)  ? g1kRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                        data.setAF(g1kRec.getAlleleFrequencies().containsKey(pop) ?  g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex): -1);
+                        data.setAN(g1kRec.getChromCounts().getOrDefault(pop, -1));
+                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                            PopulationInfo info = new PopulationInfo();
+                            varInfo.getPopulation().put(pop.name(), info);
+                        }
+                        varInfo.getPopulation().get(pop.name()).setThousandGenome(data);
+                    }
                     break;
                 case "dbnsfp":
                     var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
@@ -247,6 +315,23 @@ public class AnnotationExecutor {
                     var acmgQuery = datastore.createQuery(ACMGRecord.class);
                     ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
                     varInfo.setAcmg(acmgRecord);
+                    break;
+                case "gnomad_exome":
+                    var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
+                    GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
+                    for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                        PopulationData data = new PopulationData();
+                        data.setAC(gnomadExomeRecord.getAlleleCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                        data.setAF(gnomadExomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex): -1);
+                        data.setAN(gnomadExomeRecord.getChromCounts().getOrDefault(pop, -1));
+                        data.setHomAlt(gnomadExomeRecord.getAlleleHomCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleHomCounts().get(pop).get(hgvsIndex) : -1);
+                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                            PopulationInfo info = new PopulationInfo();
+                            varInfo.getPopulation().put(pop.name(), info);
+                        }
+                        varInfo.getPopulation().get(pop.name()).setGnomadExome(data);
+                    }
+                    break;
             }
 
             if (varInfo.getRef() == null) {
@@ -280,7 +365,18 @@ public class AnnotationExecutor {
             case "exac":
                 var exacQuery = datastore.createQuery(ExacRecord.class);
                 ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
-                varInfo.setExac(exacRec);
+                for(ExacPopulation pop : ExacPopulation.values()){
+                    PopulationData data = new PopulationData();
+                    data.setAC(exacRec.getAlleleCounts().get(pop).get(hgvsIndex));
+                    data.setAF(exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex));
+                    data.setAN(exacRec.getChromCounts().get(pop));
+                    data.setHomAlt(exacRec.getAlleleHomCounts().get(pop).get(hgvsIndex));
+                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                        PopulationInfo info = new PopulationInfo();
+                        varInfo.getPopulation().put(pop.name(), info);
+                    }
+                    varInfo.getPopulation().get(pop.name()).setExac(data);
+                }
                 break;
             case "effect":
                 var effectQuery = datastore.createQuery(VariantEffectRecord.class);
@@ -295,7 +391,17 @@ public class AnnotationExecutor {
             case "g1k":
                 var g1kQuery = datastore.createQuery(ThousandGenomesRecord.class);
                 ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
-                varInfo.setThousandGenome(g1kRec);
+                for(ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()){
+                    PopulationData data = new PopulationData();
+                    data.setAC(g1kRec.getAlleleCounts().get(pop).get(hgvsIndex));
+                    data.setAF(g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex));
+                    data.setAN(g1kRec.getChromCounts().get(pop));
+                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                        PopulationInfo info = new PopulationInfo();
+                        varInfo.getPopulation().put(pop.name(), info);
+                    }
+                    varInfo.getPopulation().get(pop.name()).setThousandGenome(data);
+                }
                 break;
             case "dbnsfp":
                 var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
@@ -306,6 +412,23 @@ public class AnnotationExecutor {
                 var acmgQuery = datastore.createQuery(ACMGRecord.class);
                 ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
                 varInfo.setAcmg(acmgRecord);
+                break;
+            case "gnomad_exome":
+                var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
+                GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
+                for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                    PopulationData data = new PopulationData();
+                    data.setAC(gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex));
+                    data.setAF(gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex));
+                    data.setAN(gnomadExomeRecord.getChromCounts().get(pop));
+                    data.setHomAlt(gnomadExomeRecord.getAlleleHomCounts().get(pop).get(hgvsIndex));
+                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                        PopulationInfo info = new PopulationInfo();
+                        varInfo.getPopulation().put(pop.name(), info);
+                    }
+                    varInfo.getPopulation().get(pop.name()).setGnomadExome(data);
+                }
+                break;
         }
 
         if (varInfo.getRef() == null) {
@@ -357,7 +480,7 @@ public class AnnotationExecutor {
 
         GeneInfo geneInfo = new GeneInfo();
         geneInfo.setSymbol(geneRecord.getSymbol());
-        geneInfo.setEntrezId(geneRecord.getEntrezId());
+        geneInfo.setEntrezId(geneRecord.getEntrezID());
         geneInfo.setId(geneRecord.getId());
         geneInfo.setType(geneRecord.getType());
         geneInfo.setName(geneRecord.getName());

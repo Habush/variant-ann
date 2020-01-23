@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AnnotationRecord {
 
-    private String consquence;
+    private String annotation;
 
     private String impact;
 

@@ -64,4 +64,17 @@ public class AnnotationController {
     public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationException, IOException {
         return annotationExec.annotateByGene(gene);
     }
+
+    @RequestMapping(value = "/annotate/entrez/{entrezID}", method = RequestMethod.GET)
+    @ResponseBody
+    public GeneInfo annotateByEntrezID(@PathVariable String entrezID) throws AnnotationException, IOException {
+        return annotationExec.annotateByEntrezId(entrezID);
+    }
+
+    @RequestMapping(value = "/annotate/gene/id/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public GeneInfo annotateByGeneId(@PathVariable String id) throws AnnotationException, IOException {
+        return annotationExec.annotateGeneById(id);
+    }
+
 }
