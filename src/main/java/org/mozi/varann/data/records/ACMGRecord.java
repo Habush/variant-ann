@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,5 +40,5 @@ public class ACMGRecord extends BaseRecord {
     //Additional Info
 
     private String exonicFunction;
-    private List<OrphaDiseaseInfo> diseaseInfos;
+    private List<OrphaDiseaseInfo> diseaseInfos = new ArrayList<>();
 }

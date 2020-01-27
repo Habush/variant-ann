@@ -74,9 +74,11 @@ public class ACMGRecordConverter implements TSVToRecordConverter<ACMGRecord, Str
         List<OrphaDiseaseInfo> orphaDiseaseInfos = new ArrayList<>();
         for(String info : orphaInfo) {
             String[] details = info.split("\\|");
-            OrphaDiseaseInfo diseaseInfo = new OrphaDiseaseInfo(details[0], details[1],
-                    details[2], details[3], details[4], details[5].split(" "));
-            orphaDiseaseInfos.add(diseaseInfo);
+            if(details.length >= 6){
+                OrphaDiseaseInfo diseaseInfo = new OrphaDiseaseInfo(details[0], details[1],
+                        details[2], details[3], details[4], details[5].split(" "));
+                orphaDiseaseInfos.add(diseaseInfo);
+            }
         }
 
         builder.setDiseaseInfos(orphaDiseaseInfos);

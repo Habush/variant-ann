@@ -215,7 +215,7 @@ public class DataLoader {
         Query<GnomadExomeRecord> query = datastore.createQuery(GnomadExomeRecord.class);
         if(query.count() == 0) {
             logger.info("Adding Gnomad Exome Records");
-            String fileName = prod ?  PathUtil.join(basePath, "vcfs", "gnomad_exomes.vcf.gz") : PathUtil.join(basePath, "vcfs", "gnomad_exomes_sample.vcf.gz");
+            String fileName = prod ?  PathUtil.join(basePath, "vcfs", "gnomad_exomes.vcf.bgz") : PathUtil.join(basePath, "vcfs", "gnomad_exomes_sample.vcf.gz");
             try(VCFFileReader fileReader = new VCFFileReader(new File(fileName), false)) {
                 GnomadExomeRecordConverter recordConverter = new GnomadExomeRecordConverter();
                 for(VariantContext vc : fileReader) {
