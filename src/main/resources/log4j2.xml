@@ -4,13 +4,18 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level - %m%n"/>
         </Console>
+        <File name="fileLog" fileName="app.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level - %m%n"/>
+        </File>
     </Appenders>
     <Loggers>
-        <Logger name="org.apache.log4j.xml" level="info">
+        <Logger name="org.mozi.varann" level="info" additivity="false">
             <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="fileLog"/>
         </Logger>
         <Root level="info">
             <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="fileLog"/>
         </Root>
     </Loggers>
 </Configuration>

@@ -196,7 +196,7 @@ public class AnnotationExecutor {
         SearchRequest request = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, chr, start, end);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
-            throw new AnnotationException(String.format("Couldn't find variants in range %s:%d-%d", chr, start, end));
+            return new ArrayList<>();
         }
 
         List<VariantInfo> varInfos = new ArrayList<>();

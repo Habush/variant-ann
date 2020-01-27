@@ -79,62 +79,91 @@ public class DataLoader {
     public void initData() throws IOException, InterruptedException {
         checkIndices();
 
-        Thread.setDefaultUncaughtExceptionHandler( (t, e) -> {
-            logger.error(e);
-        });
-
         logger.info("Loading records");
         ExecutorService execService = Executors.newFixedThreadPool(8);
         List<Callable<Void>> tasks = new ArrayList<>();
         ;
         Callable<Void> clinvarTask = () -> {
-            addClinvarRecords();
-            logger.info("Finished adding Clinvar records");
+            try {
+                addClinvarRecords();
+                logger.info("Finished adding Clinvar records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(clinvarTask);;
         Callable<Void> exacTask = () -> {
-            addExacRecords();
-            logger.info("Finished adding Exac records");
+            try {
+                addExacRecords();
+                logger.info("Finished adding Exac records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(exacTask);
         Callable<Void> g1kTask = () -> {
-            addG1kRecords();
-            logger.info("Finished adding 1K records");
+            try {
+                addG1kRecords();
+                logger.info("Finished adding 1K records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(g1kTask);
         Callable<Void> varEffTask = () -> {
-            addVarEffectRecords();
-            logger.info("Finished adding Effect records");
+            try {
+                addVarEffectRecords();
+                logger.info("Finished adding Effect records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(varEffTask);
         Callable<Void> dbnsfpTask = () -> {
-            addDBNSFPRecords();
-            logger.info("Finished adding DBNSFP records");
+            try {
+                addDBNSFPRecords();
+                logger.info("Finished adding DBNSFP records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(dbnsfpTask);
 
         Callable<Void> acmgTask = () -> {
-            addACMGRecords();
-            logger.info("Finished adding ACMG Records");
+            try {
+                addACMGRecords();
+                logger.info("Finished adding ACMG Records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
         tasks.add(acmgTask);
 
         Callable<Void> genesTask = () -> {
-            addGeneRecord();
-            logger.info("Finished adding Genes");
+            try {
+                addGeneRecord();
+                logger.info("Finished adding Genes");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
+
             return null;
         };
         tasks.add(genesTask);
 
         Callable<Void> gnomadTask = () -> {
-            addGnomadExomeRecords();
-            logger.info("Finished adding Gnomad records");
+            try {
+                addGnomadExomeRecords();
+                logger.info("Finished adding Gnomad records");
+            } catch (Exception e) {
+                logger.catching(e);
+            }
             return null;
         };
 
@@ -301,16 +330,37 @@ public class DataLoader {
     private void addACMGRecords() throws IOException {
         Query<ACMGRecord> query = datastore.createQuery(ACMGRecord.class);
         if(query.count() == 0){
-            String fileName = prod ? PathUtil.join(basePath, "vcfs", "intervar_multianno.tsv.gz") : PathUtil.join(basePath, "vcfs", "demo_intervar.tsv.gz");
-            try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
-                 BufferedReader reader = new BufferedReader(decoder)) {
-                logger.info("Adding ACMG Records");
 
-                ACMGRecordConverter converter = new ACMGRecordConverter();
-                reader.readLine(); //read the columns
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    datastore.save(converter.convert(line, referenceDictionary));
+            if(prod) {
+                Files.list(Paths.get(basePath, "intervar")).forEach(path -> {
+                    try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
+                         BufferedReader reader = new BufferedReader(decoder)) {
+                        logger.info("Adding ACMG Records");
+
+                        ACMGRecordConverter converter = new ACMGRecordConverter();
+                        reader.readLine(); //read the columns
+                        String line = null;
+                        while ((line = reader.readLine()) != null) {
+                            datastore.save(converter.convert(line, referenceDictionary));
+                        }
+                    }
+                     catch (IOException e) {
+                        logger.catching(e);
+                        logger.error("Couldn't load file: " + path.toString());
+                    }
+                });
+            } else {
+                String fileName = PathUtil.join(basePath, "vcfs", "demo_intervar.tsv.gz");
+                try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
+                     BufferedReader reader = new BufferedReader(decoder)) {
+                    logger.info("Adding ACMG Records");
+
+                    ACMGRecordConverter converter = new ACMGRecordConverter();
+                    reader.readLine(); //read the columns
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        datastore.save(converter.convert(line, referenceDictionary));
+                    }
                 }
             }
         }
