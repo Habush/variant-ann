@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * This class executes the annotation request
@@ -186,7 +187,7 @@ public class AnnotationExecutor {
         }
 
         GeneInfo geneInfo = buildGeneInfo(hit);
-
+        varInfos.forEach(info -> info.setGene(geneInfo.getSymbol()));
         geneInfo.setVariants(varInfos);
         return geneInfo;
     }
@@ -210,7 +211,6 @@ public class AnnotationExecutor {
                 varInfos.add(setVariantGene(buildVariantInfo(varHit, hgvs.get(0))));
             }
         }
-
         return varInfos;
     }
 
@@ -434,6 +434,7 @@ public class AnnotationExecutor {
         if (varInfo.getRef() == null) {
             setRecord(varInfo, hit);
         }
+
 
         return varInfo;
     }

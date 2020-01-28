@@ -335,7 +335,7 @@ public class DataLoader {
                 Files.list(Paths.get(basePath, "intervar")).forEach(path -> {
                     try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
                          BufferedReader reader = new BufferedReader(decoder)) {
-                        logger.info("Adding ACMG Records");
+                        logger.info("Adding ACMG Records for " + path.toString());
 
                         ACMGRecordConverter converter = new ACMGRecordConverter();
                         reader.readLine(); //read the columns
@@ -345,8 +345,8 @@ public class DataLoader {
                         }
                     }
                      catch (IOException e) {
+                         logger.error("Couldn't load file: " + path.toString());
                         logger.catching(e);
-                        logger.error("Couldn't load file: " + path.toString());
                     }
                 });
             } else {

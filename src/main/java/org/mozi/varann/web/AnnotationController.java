@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mozi.varann.services.AnnotationExecutor;
 import org.mozi.varann.util.AnnotationException;
+import org.mozi.varann.util.RegexPatterns;
 import org.mozi.varann.web.data.GeneInfo;
 import org.mozi.varann.web.data.VariantInfo;
 import org.springframework.stereotype.Controller;
@@ -21,7 +22,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AnnotationController {
 
-    private static final Pattern pat = Pattern.compile("(chr)?(\\d+):(\\d+)-(\\d+)");
     private final AnnotationExecutor annotationExec;
     private static final Logger logger = LogManager.getLogger(AnnotationController.class);
 
@@ -34,7 +34,14 @@ public class AnnotationController {
     @RequestMapping(value = "/annotate", method = RequestMethod.GET)
     @ResponseBody
     public VariantInfo annotateByHgvs(@RequestParam(value = "hgvs") String hgvs) throws AnnotationException, IOException {
-        return annotationExec.annotateHgvs(hgvs);
+        if(RegexPatterns.hgvsMatch(hgvs)){
+            if(hgvs.contains("chr")){
+                hgvs = hgvs.substring(3);
+            }
+            return annotationExec.annotateHgvs(hgvs);
+        } else {
+            throw new AnnotationException("Unable to parse hgvs genomic reference " + hgvs + " . Please check again");
+        }
     }
 
     @RequestMapping(value = "/annotate-multi", method = RequestMethod.GET)
@@ -48,7 +55,7 @@ public class AnnotationController {
     @RequestMapping(value = "/annotate/range/", method = RequestMethod.GET)
     @ResponseBody
     public List<VariantInfo> annotateByRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {
-        Matcher match =  pat.matcher(query);
+        Matcher match =  RegexPatterns.rangePattern.matcher(query);
         if(match.matches()){
             String contig = match.group(2);
             long start = Long.parseLong(match.group(3));
