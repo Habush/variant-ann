@@ -29,6 +29,7 @@ import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.genes.GeneRecordConverter;
+import org.mozi.varann.data.impl.transcript.TranscriptRecordConverter;
 import org.mozi.varann.data.records.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -80,7 +81,7 @@ public class DataLoader {
         checkIndices();
 
         logger.info("Loading records");
-        ExecutorService execService = Executors.newFixedThreadPool(8);
+        ExecutorService execService = Executors.newFixedThreadPool(9);
         List<Callable<Void>> tasks = new ArrayList<>();
         ;
         Callable<Void> clinvarTask = () -> {
@@ -168,6 +169,18 @@ public class DataLoader {
         };
 
         tasks.add(gnomadTask);
+
+        Callable<Void> transcriptTask = () -> {
+            try {
+                addTranscriptRecords();
+                logger.info("Finished adding Transcript records");
+            } catch (Exception e){
+                logger.catching(e);
+            }
+            return null;
+        };
+
+        tasks.add(transcriptTask);
 
         execService.invokeAll(tasks);
     }
@@ -346,7 +359,6 @@ public class DataLoader {
                     }
                      catch (IOException e) {
                          logger.error("Couldn't load file: " + path.toString());
-                        logger.catching(e);
                     }
                 });
             } else {
@@ -362,6 +374,25 @@ public class DataLoader {
                         datastore.save(converter.convert(line, referenceDictionary));
                     }
                 }
+            }
+        }
+    }
+
+    private void addTranscriptRecords() throws IOException {
+        Query<TranscriptRecord> query = datastore.createQuery(TranscriptRecord.class);
+        if(query.count() == 0) {
+            String fileName = PathUtil.join(basePath, "transcripts.tsv");
+            logger.info("Adding Transcript records");
+            try (Reader decoder = new InputStreamReader(new FileInputStream(fileName));
+                 BufferedReader reader = new BufferedReader(decoder)){
+                TranscriptRecordConverter converter = new TranscriptRecordConverter();
+                //read the columns
+                reader.readLine();
+                String line = null;
+                while((line = reader.readLine()) != null){
+                    datastore.save(converter.convert(line, referenceDictionary));
+                }
+
             }
         }
     }

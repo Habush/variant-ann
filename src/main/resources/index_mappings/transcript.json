@@ -1,0 +1,22 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "chrom": {
+      "type": "keyword"
+    },
+    "txstart": {
+      "type": "long"
+    },
+    "txend": {
+      "type": "long"
+    },
+    "name": {
+      "type": "keyword"
+    },
+    "geneId": {
+      "type": "keyword"
+    }
+  }
+}
