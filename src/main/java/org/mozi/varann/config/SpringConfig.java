@@ -67,8 +67,8 @@ public class SpringConfig {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowCredentials(true);
-        //TODO change this a specific list of urls
-        corsConfig.setAllowedOrigins(Collections.singletonList("*"));
+
+        corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost:8080"));
         corsConfig.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
         source.registerCorsConfiguration("/**", corsConfig);

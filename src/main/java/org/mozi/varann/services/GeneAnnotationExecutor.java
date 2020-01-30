@@ -170,6 +170,7 @@ public class GeneAnnotationExecutor {
             transcript.setName((String) map.get("name"));;
             transcript.setId((String)map.get("id"));
             transcript.setGeneId((String)map.get("geneId"));
+            transcript.setChrom((String)map.get("chrom"));
             transcript.setTxStart(Long.valueOf((Integer)map.get("txStart")));
             transcript.setTxEnd(Long.valueOf((Integer) map.get("txEnd")));
 
@@ -200,6 +201,7 @@ public class GeneAnnotationExecutor {
             transcript.setName((String) map.get("name"));;
             transcript.setId((String)map.get("id"));
             transcript.setGeneId((String)map.get("geneId"));
+            transcript.setChrom((String)map.get("chrom"));
             transcript.setTxStart(Long.valueOf((Integer)map.get("txStart")));
             transcript.setTxEnd(Long.valueOf((Integer) map.get("txEnd")));
 
