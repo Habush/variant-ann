@@ -137,8 +137,8 @@ public class GeneAnnotationExecutor {
             geneInfo.setType((String)map.get("type"));
             geneInfo.setId((String)map.get("id"));
             geneInfo.setEntrezId((String)map.get("entrezId"));
-            geneInfo.setStart((Long)map.get("start"));
-            geneInfo.setEnd((Long)map.get("end"));
+            geneInfo.setStart(Long.valueOf((Integer) map.get("start")));
+            geneInfo.setEnd(Long.valueOf((Integer) map.get("end")));
 
             genes.add(geneInfo);
         }
