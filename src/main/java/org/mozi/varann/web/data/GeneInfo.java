@@ -3,6 +3,7 @@ package org.mozi.varann.web.data;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.mozi.varann.data.records.TranscriptRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,5 +22,10 @@ public class GeneInfo {
     private String name;
     private String type;
 
+    private long start;
+    private long end;
+
     List<VariantInfo> variants;
+
+    List<TranscriptRecord> transcripts;
 }

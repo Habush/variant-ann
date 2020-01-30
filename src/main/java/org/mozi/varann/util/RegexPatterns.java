@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
  * 1/28/20
  */
 public class RegexPatterns {
-    public static final Pattern rangePattern = Pattern.compile("(chr)?([\\d+|XYMTxymt]):(\\d+)-(\\d+)");
+    public static final Pattern rangePattern = Pattern.compile("(chr)?([\\d|XYMTxymt]+):(\\d+)-(\\d+)");
     public static final Pattern substitutionPattern = Pattern.compile("(chr)?([\\d|XYMTxymt]+):[gG]\\.(\\d+)([GCTAgcta])?>([GCTAgcta])");
     public static final Pattern substitutionNoChangePattern = Pattern.compile("(chr)?([\\d|XYMTxymt]+):[gG]\\.(\\d+)([gctaGCTA])?=");
     public static final Pattern indelPattern = Pattern.compile("(chr)?([\\d|XYMTxymt]+):[gG]\\.(\\d+)(?:_(\\d+))?([GCTAgcta]+)?delins([GCTAgcta]+)");

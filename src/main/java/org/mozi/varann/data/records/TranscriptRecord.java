@@ -1,5 +1,6 @@
 package org.mozi.varann.data.records;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.bson.types.ObjectId;
 @Entity("transcript")
 public class TranscriptRecord {
 
+    @JsonIgnore
     @Id
     private ObjectId _id;
 
