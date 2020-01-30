@@ -24,8 +24,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * The bean configuration to get Ignite instance
@@ -67,8 +69,10 @@ public class SpringConfig {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfig = new CorsConfiguration();
         corsConfig.setAllowCredentials(true);
-
-        corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost:8080"));
+        List<String> origins = new ArrayList<>();
+        origins.add("http://localhost:8080");
+        origins.add("http://localhost:8082");
+        corsConfig.setAllowedOrigins(origins);
         corsConfig.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
         source.registerCorsConfiguration("/**", corsConfig);
