@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
  * 1/29/20
  */
 @Controller
+@CrossOrigin
 @RequiredArgsConstructor
 public class GeneAnnotationController {
 
@@ -57,7 +58,6 @@ public class GeneAnnotationController {
         }
     }
 
-    @CrossOrigin
     @RequestMapping(value = "/annotate/transcript/range/", method = RequestMethod.GET)
     @ResponseBody
     public List<TranscriptRecord> getTranscriptsInRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {

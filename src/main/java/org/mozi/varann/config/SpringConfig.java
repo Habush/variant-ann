@@ -63,22 +63,4 @@ public class SpringConfig {
         logger.info("Reference dictionary loaded.");
         return data.getRefDict();
     }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        final CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowCredentials(true);
-        List<String> origins = new ArrayList<>();
-        origins.add("http://localhost:8080");
-        origins.add("http://localhost:8082");
-        corsConfig.setAllowedOrigins(origins);
-        corsConfig.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
-        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
-        source.registerCorsConfiguration("/**", corsConfig);
-
-        return new CorsFilter(source);
-    }
-
-
 }
