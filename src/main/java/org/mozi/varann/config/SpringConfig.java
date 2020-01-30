@@ -19,8 +19,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ResourceUtils;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * The bean configuration to get Ignite instance
@@ -55,6 +60,20 @@ public class SpringConfig {
         JannovarData data = new JannovarDataSerializer(PathUtil.join(basePath, "refs", "hg19_ensembl.ser")).load();
         logger.info("Reference dictionary loaded.");
         return data.getRefDict();
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowCredentials(true);
+        //TODO change this a specific list of urls
+        corsConfig.setAllowedOrigins(Collections.singletonList("*"));
+        corsConfig.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsFilter(source);
     }
 
 
