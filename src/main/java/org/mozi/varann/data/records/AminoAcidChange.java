@@ -9,20 +9,11 @@ import lombok.NoArgsConstructor;
 @Embedded
 @AllArgsConstructor
 @NoArgsConstructor
-public class AnnotationRecord {
+public class AminoAcidChange {
 
-    private String annotation;
-
-    private String impact;
-
-    private String featureType;
-
-    private String featureId;
-
-    private String bioType;
-
+    private String transcriptId;
+    private String exon;
     private String cdsChange;
-
     private String proteinChange;
 
 }

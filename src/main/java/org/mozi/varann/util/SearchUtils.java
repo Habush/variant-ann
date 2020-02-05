@@ -91,14 +91,17 @@ public class SearchUtils {
                         varInfo.getPopulation().get(pop.name()).setExac(data);
                     }
                     break;
-                case "effect":
-                    var effectQuery = datastore.createQuery(VariantEffectRecord.class);
-                    VariantEffectRecord effectRec = effectQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    EffectInfo effectInfo = new EffectInfo();
-                    effectInfo.setAnnotation(effectRec.getAnnotation().get(alt));
-                    effectInfo.setHgvsNomination(effectRec.getHgvsNomination().get(alt));
-                    varInfo.setEffect(effectInfo);
-                    varInfo.setId(effectRec.getRsId());
+                case "variant":
+                    var varQuery = datastore.createQuery(VariantRecord.class);
+                    VariantRecord record = varQuery.field("_id").equal(new ObjectId(id)).find().next();
+                    varInfo.setGene(record.getGene());
+                    varInfo.setBioType(record.getBioType());
+                    varInfo.setExonicFunction(record.getExonicFunction());
+                    varInfo.setEnsembleGenes(record.getEnsGene());
+                    varInfo.setEnsembleTranscripts(record.getEnsAAChange());
+                    varInfo.setRefSeqTranscripts(record.getRefAAChange());
+                    varInfo.setAcmg(record.getIntervar());
+                    varInfo.setId(record.getRsId());
                     break;
 
                 case "g1k":
@@ -120,11 +123,6 @@ public class SearchUtils {
                     var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
                     DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
                     varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
-                    break;
-                case "acmg":
-                    var acmgQuery = datastore.createQuery(ACMGRecord.class);
-                    ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setAcmg(acmgRecord);
                     break;
                 case "gnomad_exome":
                     var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
@@ -188,14 +186,17 @@ public class SearchUtils {
                     varInfo.getPopulation().get(pop.name()).setExac(data);
                 }
                 break;
-            case "effect":
-                var effectQuery = datastore.createQuery(VariantEffectRecord.class);
-                VariantEffectRecord effectRec = effectQuery.field("_id").equal(new ObjectId(id)).find().next();
-                EffectInfo effectInfo = new EffectInfo();
-                effectInfo.setAnnotation(effectRec.getAnnotation().get(alt));
-                effectInfo.setHgvsNomination(effectRec.getHgvsNomination().get(alt));
-                varInfo.setEffect(effectInfo);
-                varInfo.setId(effectRec.getRsId());
+            case "variant":
+                var varQuery = datastore.createQuery(VariantRecord.class);
+                VariantRecord record = varQuery.field("_id").equal(new ObjectId(id)).find().next();
+                varInfo.setGene(record.getGene());
+                varInfo.setBioType(record.getBioType());
+                varInfo.setExonicFunction(record.getExonicFunction());
+                varInfo.setEnsembleGenes(record.getEnsGene());
+                varInfo.setEnsembleTranscripts(record.getEnsAAChange());
+                varInfo.setRefSeqTranscripts(record.getRefAAChange());
+                varInfo.setAcmg(record.getIntervar());
+                varInfo.setId(record.getRsId());
                 break;
 
             case "g1k":
@@ -217,11 +218,6 @@ public class SearchUtils {
                 var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
                 DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
                 varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
-                break;
-            case "acmg":
-                var acmgQuery = datastore.createQuery(ACMGRecord.class);
-                ACMGRecord acmgRecord = acmgQuery.field("_id").equal(new ObjectId(id)).find().next();
-                varInfo.setAcmg(acmgRecord);
                 break;
             case "gnomad_exome":
                 var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
@@ -282,31 +278,5 @@ public class SearchUtils {
         }
 
         return scoreInfo;
-    }
-
-    public static VariantInfo setVariantGene(RestHighLevelClient client, VariantInfo variantInfo) throws IOException {
-        RangeQueryBuilder startRangeQueryBuilder = QueryBuilders.rangeQuery("start");
-        startRangeQueryBuilder.lte(variantInfo.getPos());
-        RangeQueryBuilder endRangeQueryBuilder = QueryBuilders.rangeQuery("end");
-        endRangeQueryBuilder.gte(variantInfo.getPos());
-        MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("chrom", variantInfo.getChrom());
-        SearchRequest searchRequest = new SearchRequest("genes");
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        var boolQuery = QueryBuilders.boolQuery();
-        boolQuery.must().add(startRangeQueryBuilder);
-        boolQuery.must().add(endRangeQueryBuilder);
-        boolQuery.must().add(matchQueryBuilder);
-        sourceBuilder.query(boolQuery);
-        searchRequest.source(sourceBuilder);
-
-        var searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
-        if (searchResponse.getHits().getTotalHits().value == 0) { //the variant is intergenic
-            return variantInfo;
-        }
-        String symbol = (String) searchResponse.getHits().getAt(0).getSourceAsMap().get("symbol");
-        variantInfo.setGene(symbol);
-
-        return variantInfo;
     }
 }

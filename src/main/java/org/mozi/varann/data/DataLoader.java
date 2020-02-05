@@ -21,9 +21,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.mozi.varann.data.impl.ACMGRecordConverter;
+import org.mozi.varann.data.impl.annotation.VariantRecordConverter;
 import org.mozi.varann.data.impl.gnomad.GnomadExomeRecordConverter;
-import org.mozi.varann.data.impl.annotation.VariantContextToEffectRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
@@ -36,9 +35,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -114,16 +115,6 @@ public class DataLoader {
             return null;
         };
         tasks.add(g1kTask);
-        Callable<Void> varEffTask = () -> {
-            try {
-                addVarEffectRecords();
-                logger.info("Finished adding Effect records");
-            } catch (Exception e) {
-                logger.catching(e);
-            }
-            return null;
-        };
-        tasks.add(varEffTask);
         Callable<Void> dbnsfpTask = () -> {
             try {
                 addDBNSFPRecords();
@@ -135,16 +126,16 @@ public class DataLoader {
         };
         tasks.add(dbnsfpTask);
 
-        Callable<Void> acmgTask = () -> {
+        Callable<Void> interVarTask = () -> {
             try {
-                addACMGRecords();
+                addInterVarRecords();
                 logger.info("Finished adding ACMG Records");
             } catch (Exception e) {
                 logger.catching(e);
             }
             return null;
         };
-        tasks.add(acmgTask);
+        tasks.add(interVarTask);
 
         Callable<Void> genesTask = () -> {
             try {
@@ -240,24 +231,6 @@ public class DataLoader {
     }
 
 
-    private void addVarEffectRecords() {
-        Query<VariantEffectRecord> query = datastore.createQuery(VariantEffectRecord.class);
-        if (query.count() == 0) {
-            logger.info("Adding Variant Effect Records...");
-            String fileName = prod ? PathUtil.join(basePath, "vcfs", "var_effect.vcf.gz") : PathUtil.join(basePath, "vcfs", "var_effect_sample_ensembl.vcf");
-            try (VCFFileReader fileReader = new VCFFileReader(new File(fileName), false);) {
-                VariantContextToEffectRecordConverter recordConverter = new VariantContextToEffectRecordConverter();
-                VariantEffectRecord record = null;
-                for (VariantContext variantContext : fileReader) {
-                    record = recordConverter.convert(variantContext, referenceDictionary);
-                    if (record != null) {
-                        datastore.save(record);
-                    }
-                }
-            }
-        }
-    }
-
     private void addG1kRecords() {
         Query<ThousandGenomesRecord> query = datastore.createQuery(ThousandGenomesRecord.class);
         if (query.count() == 0) {
@@ -340,34 +313,36 @@ public class DataLoader {
         }
     }
 
-    private void addACMGRecords() throws IOException {
-        Query<ACMGRecord> query = datastore.createQuery(ACMGRecord.class);
+    private void addInterVarRecords() throws IOException, InterruptedException {
+        Query<VariantRecord> query = datastore.createQuery(VariantRecord.class);
         if(query.count() == 0){
 
             if(prod) {
-                Files.list(Paths.get(basePath, "intervar")).forEach(path -> {
-                    try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
-                         BufferedReader reader = new BufferedReader(decoder)) {
-                        logger.info("Adding ACMG Records for " + path.toString());
+                ExecutorService exeService = Executors.newFixedThreadPool(2);
+                Spliterator<Path> split1 = Files.list(Paths.get(basePath, "intervar")).spliterator();
+                Spliterator<Path> split2 = split1.trySplit();
+                logger.info("First split: " + split1.estimateSize());
+                logger.info("Second split: " + split2.estimateSize());
+                List<Callable<Void>> tasks = new ArrayList<>();
+                Callable<Void> task1 = () -> {
+                    addInterVarRecord(split1);
+                    return null;
+                };
+                tasks.add(task1);
+                Callable<Void> task2 = () -> {
+                    addInterVarRecord(split2);
+                    return null;
+                };
+                tasks.add(task2);
+                exeService.invokeAll(tasks);
 
-                        ACMGRecordConverter converter = new ACMGRecordConverter();
-                        reader.readLine(); //read the columns
-                        String line = null;
-                        while ((line = reader.readLine()) != null) {
-                            datastore.save(converter.convert(line, referenceDictionary));
-                        }
-                    }
-                     catch (IOException e) {
-                         logger.error("Couldn't load file: " + path.toString());
-                    }
-                });
             } else {
                 String fileName = PathUtil.join(basePath, "vcfs", "demo_intervar.tsv.gz");
                 try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
                      BufferedReader reader = new BufferedReader(decoder)) {
                     logger.info("Adding ACMG Records");
 
-                    ACMGRecordConverter converter = new ACMGRecordConverter();
+                    VariantRecordConverter converter = new VariantRecordConverter();
                     reader.readLine(); //read the columns
                     String line = null;
                     while ((line = reader.readLine()) != null) {
@@ -376,6 +351,25 @@ public class DataLoader {
                 }
             }
         }
+    }
+
+    private void addInterVarRecord(Spliterator<Path> split) throws IOException{
+        split.tryAdvance(path -> {
+            try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
+                 BufferedReader reader = new BufferedReader(decoder)) {
+                logger.info("Adding ACMG Records for " + path.toString());
+
+                VariantRecordConverter converter = new VariantRecordConverter();
+                reader.readLine(); //read the columns
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    datastore.save(converter.convert(line, referenceDictionary));
+                }
+            }
+            catch (IOException e) {
+                logger.error("Couldn't load file: " + path.toString());
+            }
+        });
     }
 
     private void addTranscriptRecords() throws IOException {

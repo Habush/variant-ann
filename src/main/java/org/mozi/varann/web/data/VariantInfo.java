@@ -9,6 +9,7 @@ import lombok.Data;
 import org.mozi.varann.data.records.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * An aggregator class that holds the info about a variant from all dbs
@@ -42,6 +43,14 @@ public class VariantInfo {
      */
     private String hgvs;
 
+    private String bioType;
+
+    private String gene;
+    private List<String> ensembleGenes;
+    private List<AminoAcidChange> ensembleTranscripts;
+    private List<AminoAcidChange> refSeqTranscripts;
+    private String exonicFunction;
+
     /**
      * {@link DiseaseInfo} info about this variant
      */
@@ -49,18 +58,12 @@ public class VariantInfo {
 
     private HashMap<String, PopulationInfo> population = new HashMap<>();
 
-    /**
-     * {@link EffectInfo} info about this variant
-     */
-    private EffectInfo effect;
 
     /**
      * {@link ScoreInfo} info about this variant
      */
     private ScoreInfo scores;
 
-    private String gene;
-
-    private ACMGRecord acmg;
+    private IntervarRecord acmg;
 
 }

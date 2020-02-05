@@ -3,10 +3,9 @@ package org.mozi.varann.web;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mozi.varann.services.AnnotationExecutor;
+import org.mozi.varann.services.VariantAnnotationExecutor;
 import org.mozi.varann.util.AnnotationException;
 import org.mozi.varann.util.RegexPatterns;
-import org.mozi.varann.web.data.GeneInfo;
 import org.mozi.varann.web.data.VariantInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,7 @@ import java.util.regex.Matcher;
 @RequiredArgsConstructor
 public class VariantAnnotationController {
 
-    private final AnnotationExecutor annotationExec;
+    private final VariantAnnotationExecutor annotationExec;
     private static final Logger logger = LogManager.getLogger(VariantAnnotationController.class);
 
     @RequestMapping(value = "/annotate/variant/{id}", method = RequestMethod.GET)

@@ -21,6 +21,10 @@
     },
     "rsId": {
       "type": "keyword"
+    },
+
+    "gene": {
+      "type": "keyword"
     }
   }
 }

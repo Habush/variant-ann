@@ -10,15 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.var;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bson.types.ObjectId;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.SearchHit;
-import org.mozi.varann.data.records.GeneRecord;
 import org.mozi.varann.util.AnnotationException;
-import org.mozi.varann.web.data.GeneInfo;
 import org.mozi.varann.web.data.VariantInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -36,7 +33,7 @@ import static org.mozi.varann.util.SearchUtils.*;
  */
 @Service
 @RequiredArgsConstructor
-public class AnnotationExecutor {
+public class VariantAnnotationExecutor {
 
     private final RestHighLevelClient client;
 
@@ -45,15 +42,11 @@ public class AnnotationExecutor {
     @Value("${indices}")
     private String[] indices;
 
-    private static final Logger logger = LogManager.getLogger(AnnotationExecutor.class);
+    private static final Logger logger = LogManager.getLogger(VariantAnnotationExecutor.class);
     @SuppressWarnings("unchecked")
     public VariantInfo annotateId(String id) throws AnnotationException, IOException {
-        if (id.contains("rs")) {
-            id = id.substring(id.indexOf("rs") + 2);
-        }
-
         //Query dbSNP for the id;
-        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"effect"}, "rsId", id), RequestOptions.DEFAULT);
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant"}, "rsId", id), RequestOptions.DEFAULT);
 
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationException("Couldn't find a variant with id " + id);
@@ -69,9 +62,7 @@ public class AnnotationExecutor {
 
         searchResponse = client.search(getSearchRequest(indices, "hgvs", hgvs.get(0)), RequestOptions.DEFAULT);
 
-        VariantInfo variantInfo = buildVariantInfo(datastore ,searchResponse.getHits(), hgvs.get(0));
-
-        return setVariantGene(client,variantInfo);
+        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs.get(0));
     }
 
     public VariantInfo annotateHgvs(String hgvs) throws AnnotationException, IOException {
@@ -80,9 +71,8 @@ public class AnnotationExecutor {
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationException("Couldn't find a variant with hgvs id " + hgvs);
         }
-        VariantInfo variantInfo = buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
 
-        return setVariantGene(client,variantInfo);
+        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
     }
 
     /**
@@ -102,7 +92,7 @@ public class AnnotationExecutor {
 
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateByRange(String chr, long start, long end) throws IOException {
-        SearchRequest request = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp"}, chr, start, end);
+        SearchRequest request = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "dbnsfp"}, chr, start, end);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
             return new ArrayList<>();
@@ -113,10 +103,10 @@ public class AnnotationExecutor {
             List<String> hgvs = ((ArrayList<String>) varHit.getSourceAsMap().get("hgvs"));
             if (hgvs.size() > 1) {
                 for (var hgv : hgvs) {
-                    varInfos.add(setVariantGene(client ,buildVariantInfo(datastore,varHit, hgv)));
+                    varInfos.add(buildVariantInfo(datastore,varHit, hgv));
                 }
             } else {
-                varInfos.add(setVariantGene(client ,buildVariantInfo(datastore,varHit, hgvs.get(0))));
+                varInfos.add(buildVariantInfo(datastore,varHit, hgvs.get(0)));
             }
         }
         return varInfos;
