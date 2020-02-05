@@ -43,6 +43,7 @@ import java.util.Spliterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -319,7 +320,7 @@ public class DataLoader {
 
             if(prod) {
                 ExecutorService exeService = Executors.newFixedThreadPool(2);
-                Spliterator<Path> split1 = Files.list(Paths.get(basePath, "intervar")).spliterator();
+                Spliterator<Path> split1 = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList()).spliterator();
                 Spliterator<Path> split2 = split1.trySplit();
                 logger.info("First split: " + split1.estimateSize());
                 logger.info("Second split: " + split2.estimateSize());
@@ -353,8 +354,8 @@ public class DataLoader {
         }
     }
 
-    private void addInterVarRecord(Spliterator<Path> split) throws IOException{
-        split.tryAdvance(path -> {
+    private void addInterVarRecord(Spliterator<Path> split) {
+        while (split.tryAdvance(path -> {
             try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
                  BufferedReader reader = new BufferedReader(decoder)) {
                 logger.info("Adding ACMG Records for " + path.toString());
@@ -369,7 +370,10 @@ public class DataLoader {
             catch (IOException e) {
                 logger.error("Couldn't load file: " + path.toString());
             }
-        });
+        })){
+           
+        }
+
     }
 
     private void addTranscriptRecords() throws IOException {
