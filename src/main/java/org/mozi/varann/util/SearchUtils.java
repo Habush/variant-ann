@@ -177,9 +177,9 @@ public class SearchUtils {
                 ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
                 for(ExacPopulation pop : ExacPopulation.values()){
                     PopulationData data = new PopulationData();
-                    data.setAC(exacRec.getAlleleCounts().get(pop).get(hgvsIndex));
-                    data.setAF(exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex));
-                    data.setAN(exacRec.getChromCounts().get(pop));
+                    data.setAC(exacRec.getAlleleCounts().containsKey(pop) ? exacRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                    data.setAF(exacRec.getAlleleFrequencies().containsKey(pop) ? exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
+                    data.setAN(exacRec.getChromCounts().getOrDefault(pop, -1));
                     data.setHomAlt(exacRec.getAlleleHomCounts().get(pop).get(hgvsIndex));
                     if(varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();
@@ -203,9 +203,9 @@ public class SearchUtils {
                 ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
                 for(ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()){
                     PopulationData data = new PopulationData();
-                    data.setAC(g1kRec.getAlleleCounts().get(pop).get(hgvsIndex));
-                    data.setAF(g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex));
-                    data.setAN(g1kRec.getChromCounts().get(pop));
+                    data.setAC(g1kRec.getAlleleCounts().containsKey(pop) ? g1kRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                    data.setAF(g1kRec.getAlleleFrequencies().containsKey(pop) ? g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
+                    data.setAN( g1kRec.getChromCounts().getOrDefault(pop, -1));
                     if(varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();
                         varInfo.getPopulation().put(pop.name(), info);
@@ -228,9 +228,9 @@ public class SearchUtils {
                 GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
                 for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
                     PopulationData data = new PopulationData();
-                    data.setAC(gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex));
-                    data.setAF(gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex));
-                    data.setAN(gnomadExomeRecord.getChromCounts().get(pop));
+                    data.setAC(gnomadExomeRecord.getAlleleCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                    data.setAF(gnomadExomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
+                    data.setAN(gnomadExomeRecord.getChromCounts().getOrDefault(pop, -1));
                     data.setHomAlt(gnomadExomeRecord.getAlleleHomCounts().get(pop).get(hgvsIndex));
                     if(varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();

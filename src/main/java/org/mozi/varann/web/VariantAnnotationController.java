@@ -51,6 +51,7 @@ public class VariantAnnotationController {
         return annotationExec.annotateMultipleVariants(ids);
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/annotate/variant/range/", method = RequestMethod.GET)
     @ResponseBody
     public List<VariantInfo> annotateByRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {
