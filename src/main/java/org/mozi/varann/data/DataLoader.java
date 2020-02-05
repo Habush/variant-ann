@@ -1,6 +1,7 @@
 package org.mozi.varann.data;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import de.charite.compbio.jannovar.data.ReferenceDictionary;
 import de.charite.compbio.jannovar.impl.util.PathUtil;
@@ -22,12 +23,12 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.annotation.VariantRecordConverter;
-import org.mozi.varann.data.impl.gnomad.GnomadExomeRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.genes.GeneRecordConverter;
+import org.mozi.varann.data.impl.gnomad.GnomadExomeRecordConverter;
 import org.mozi.varann.data.impl.transcript.TranscriptRecordConverter;
 import org.mozi.varann.data.records.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Spliterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -317,24 +317,18 @@ public class DataLoader {
     private void addInterVarRecords() throws IOException, InterruptedException {
         Query<VariantRecord> query = datastore.createQuery(VariantRecord.class);
         if(query.count() == 0){
-
             if(prod) {
-                ExecutorService exeService = Executors.newFixedThreadPool(2);
-                Spliterator<Path> split1 = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList()).spliterator();
-                Spliterator<Path> split2 = split1.trySplit();
-                logger.info("First split: " + split1.estimateSize());
-                logger.info("Second split: " + split2.estimateSize());
+                ExecutorService exeService = Executors.newFixedThreadPool(3);
+                List<Path> intervarPaths = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList());
+
                 List<Callable<Void>> tasks = new ArrayList<>();
-                Callable<Void> task1 = () -> {
-                    addInterVarRecord(split1);
-                    return null;
-                };
-                tasks.add(task1);
-                Callable<Void> task2 = () -> {
-                    addInterVarRecord(split2);
-                    return null;
-                };
-                tasks.add(task2);
+                for (List<Path> paths : Lists.partition(intervarPaths, 3)){
+                    Callable<Void> task = () -> {
+                        addInterVarRecord(paths);
+                        return null;
+                    };
+                    tasks.add(task);
+                }
                 exeService.invokeAll(tasks);
 
             } else {
@@ -354,8 +348,8 @@ public class DataLoader {
         }
     }
 
-    private void addInterVarRecord(Spliterator<Path> split) {
-        while (split.tryAdvance(path -> {
+    private void addInterVarRecord(List<Path> paths) {
+        for(Path path :  paths){
             try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
                  BufferedReader reader = new BufferedReader(decoder)) {
                 logger.info("Adding ACMG Records for " + path.toString());
@@ -370,8 +364,6 @@ public class DataLoader {
             catch (IOException e) {
                 logger.error("Couldn't load file: " + path.toString());
             }
-        })){
-           
         }
 
     }
