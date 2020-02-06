@@ -126,7 +126,9 @@ public class VariantRecordConverter implements TSVToRecordConverter<VariantRecor
         String[] transcripts = record.split(",");
         for (String trans : transcripts) {
             String[] components = trans.split(":");
-            aaChanges.add(new AminoAcidChange(components[1], components[2], components[3], components[4]));
+            if(components.length == 5){
+                aaChanges.add(new AminoAcidChange(components[1], components[2], components[3], components[4]));
+            }
         }
 
         return aaChanges;
