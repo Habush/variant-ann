@@ -320,9 +320,13 @@ public class DataLoader {
             if(prod) {
                 ExecutorService exeService = Executors.newFixedThreadPool(3);
                 List<Path> intervarPaths = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList());
-
+                intervarPaths.sort(Path::compareTo);
+                logger.info("Total files: " + intervarPaths.size());
                 List<Callable<Void>> tasks = new ArrayList<>();
+                int i = 0;
                 for (List<Path> paths : Lists.partition(intervarPaths, 3)){
+                    i++;
+                    logger.info("Partition " + i + " has " + paths.size() + " files");
                     Callable<Void> task = () -> {
                         addInterVarRecord(paths);
                         return null;
