@@ -91,8 +91,9 @@ public class VariantAnnotationExecutor {
 
 
     @SuppressWarnings("unchecked")
-    public List<VariantInfo> annotateByRange(String chr, long start, long end) throws IOException {
+    public List<VariantInfo> annotateByRange(String chr, long start, long end, int limit) throws IOException {
         SearchRequest request = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "dbnsfp"}, chr, start, end);
+        request.source().size(limit);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
             return new ArrayList<>();
