@@ -322,21 +322,9 @@ public class DataLoader {
                 List<Path> intervarPaths = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList());
                 intervarPaths.sort(Path::compareTo);
                 logger.info("Total files: " + intervarPaths.size());
-                List<Callable<Void>> tasks = new ArrayList<>();
-                int i = 0;
                 List<List<Path>> outerList = Lists.partition(intervarPaths, 100);
                 logger.info("Outer List size: " + outerList.size());
-                for (List<Path> paths : outerList){
-                    i++;
-                    logger.info("Partition " + i + " has " + paths.size() + " files");
-                    Callable<Void> task = () -> {
-                        addInterVarRecord(paths);
-                        return null;
-                    };
-                    tasks.add(task);
-                }
-                exeService.invokeAll(tasks);
-
+                outerList.parallelStream().forEach(this::addInterVarRecord);
             } else {
                 String fileName = PathUtil.join(basePath, "vcfs", "demo_intervar.tsv.gz");
                 try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
