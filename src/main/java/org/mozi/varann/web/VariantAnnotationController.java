@@ -53,14 +53,14 @@ public class VariantAnnotationController {
     @CrossOrigin
     @RequestMapping(value = "/annotate/variant/range/", method = RequestMethod.GET)
     @ResponseBody
-    public List<VariantInfo> annotateByRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {
+    public List<VariantInfo> annotateByRange(@RequestParam(value = "q") String query, @RequestParam(value = "limit") int limit) throws IOException, AnnotationException {
         Matcher match =  RegexPatterns.rangePattern.matcher(query);
         if(match.matches()){
             String contig = match.group(2);
             long start = Long.parseLong(match.group(3));
             long end = Long.parseLong(match.group(4));
 
-            return annotationExec.annotateByRange(contig, start, end);
+            return annotationExec.annotateByRange(contig, start, end, limit);
         } else {
             throw new AnnotationException("Unable to parse query " + query + " . Please check again");
         }

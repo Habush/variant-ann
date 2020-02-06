@@ -324,7 +324,9 @@ public class DataLoader {
                 logger.info("Total files: " + intervarPaths.size());
                 List<Callable<Void>> tasks = new ArrayList<>();
                 int i = 0;
-                for (List<Path> paths : Lists.partition(intervarPaths, 3)){
+                List<List<Path>> outerList = Lists.partition(intervarPaths, 100);
+                logger.info("Outer List size: " + outerList.size());
+                for (List<Path> paths : outerList){
                     i++;
                     logger.info("Partition " + i + " has " + paths.size() + " files");
                     Callable<Void> task = () -> {

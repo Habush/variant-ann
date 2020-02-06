@@ -18,24 +18,26 @@ import java.util.regex.Matcher;
  * 1/29/20
  */
 @Controller
-@CrossOrigin
 @RequiredArgsConstructor
 public class GeneAnnotationController {
 
     private final GeneAnnotationExecutor annotationExec;
 
+    @CrossOrigin
     @RequestMapping(value = "/annotate/gene/{gene}", method = RequestMethod.GET)
     @ResponseBody
     public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationException, IOException {
         return annotationExec.annotateByGene(gene);
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/annotate/gene/entrez/{entrezID}", method = RequestMethod.GET)
     @ResponseBody
     public GeneInfo annotateByEntrezID(@PathVariable String entrezID) throws AnnotationException, IOException {
         return annotationExec.annotateByEntrezId(entrezID);
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/annotate/gene/id/{id}", method = RequestMethod.GET)
     @ResponseBody
     public GeneInfo annotateByGeneId(@PathVariable String id) throws AnnotationException, IOException {
@@ -58,6 +60,7 @@ public class GeneAnnotationController {
         }
     }
 
+    @CrossOrigin
     @RequestMapping(value = "/annotate/transcript/range/", method = RequestMethod.GET)
     @ResponseBody
     public List<TranscriptRecord> getTranscriptsInRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {
