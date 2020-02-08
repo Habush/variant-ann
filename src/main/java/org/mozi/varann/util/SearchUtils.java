@@ -4,8 +4,6 @@ import dev.morphia.Datastore;
 import lombok.var;
 import org.bson.types.ObjectId;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -13,9 +11,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.mozi.varann.data.records.*;
-import org.mozi.varann.web.data.*;
+import org.mozi.varann.web.models.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**

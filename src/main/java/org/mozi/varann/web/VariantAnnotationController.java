@@ -5,8 +5,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mozi.varann.services.VariantAnnotationExecutor;
 import org.mozi.varann.util.AnnotationException;
+import org.mozi.varann.util.AnnotationNotFoundException;
+import org.mozi.varann.util.MultipleValuesException;
 import org.mozi.varann.util.RegexPatterns;
-import org.mozi.varann.web.data.VariantInfo;
+import org.mozi.varann.web.models.MultipleVariantResult;
+import org.mozi.varann.web.models.VariantInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,13 +29,13 @@ public class VariantAnnotationController {
 
     @RequestMapping(value = "/annotate/variant/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public VariantInfo annotateById(@PathVariable String id) throws AnnotationException, IOException {
+    public VariantInfo annotateById(@PathVariable String id) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         return annotationExec.annotateId(id);
     }
 
     @RequestMapping(value = "/annotate/variant", method = RequestMethod.GET)
     @ResponseBody
-    public VariantInfo annotateByHgvs(@RequestParam(value = "hgvs") String hgvs) throws AnnotationException, IOException {
+    public VariantInfo annotateByHgvs(@RequestParam(value = "hgvs") String hgvs) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         if(RegexPatterns.hgvsMatch(hgvs)){
             if(hgvs.contains("chr")){
                 hgvs = hgvs.substring(3);
@@ -45,7 +48,7 @@ public class VariantAnnotationController {
 
     @RequestMapping(value = "/annotate/variant/multi", method = RequestMethod.GET)
     @ResponseBody
-    public CompletableFuture<List<VariantInfo>> annotateVariants(@RequestBody ArrayList<String> ids) throws IOException {
+    public CompletableFuture<MultipleVariantResult> annotateVariants(@RequestBody ArrayList<String> ids) throws IOException {
         logger.info("Starting multiple variant annotation");
         return annotationExec.annotateMultipleVariants(ids);
     }

@@ -18,8 +18,10 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.mozi.varann.data.records.GeneRecord;
 import org.mozi.varann.data.records.TranscriptRecord;
 import org.mozi.varann.util.AnnotationException;
-import org.mozi.varann.web.data.GeneInfo;
-import org.mozi.varann.web.data.VariantInfo;
+import org.mozi.varann.util.AnnotationNotFoundException;
+import org.mozi.varann.util.MultipleValuesException;
+import org.mozi.varann.web.models.GeneInfo;
+import org.mozi.varann.web.models.VariantInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -47,21 +49,21 @@ public class GeneAnnotationExecutor {
 
     private static final Logger logger = LogManager.getLogger(GeneAnnotationExecutor.class);
 
-    public GeneInfo annotateByGene(String gene) throws AnnotationException, IOException {
+    public GeneInfo annotateByGene(String gene) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "symbol", gene), RequestOptions.DEFAULT);
 
         int totalHits = (int)searchResponse.getHits().getTotalHits().value;
         if (totalHits == 0) { //RsId not found
-            throw new AnnotationException("Couldn't find a gene with symbol " + gene);
+            throw new AnnotationNotFoundException("Couldn't find a gene with symbol " + gene);
         }
 
         if (totalHits > 1) {
-            String[] idBuf = new String[totalHits];
+            List<String> idBuf = new ArrayList<>();
             for(int i = 0; i < totalHits; i++) {
-                idBuf[i] =  (String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id");
+               idBuf.add((String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id"));
             }
-            String msg = String.format("Found more than one gene for symbol %s with the following ids: %s", gene, Joiner.on(",").join(idBuf));
-            throw new AnnotationException(msg);
+
+            throw new MultipleValuesException(gene, idBuf);
         }
 
         GeneInfo geneInfo =  getGeneInfo(gene, searchResponse);
@@ -70,21 +72,20 @@ public class GeneAnnotationExecutor {
         return geneInfo;
     }
 
-    public GeneInfo annotateByEntrezId(String entrezId) throws AnnotationException, IOException {
+    public GeneInfo annotateByEntrezId(String entrezId) throws AnnotationNotFoundException, MultipleValuesException ,IOException {
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "entrezID", entrezId), RequestOptions.DEFAULT);
 
         int totalHits = (int)searchResponse.getHits().getTotalHits().value;
         if (totalHits == 0) { //RsId not found
-            throw new AnnotationException("Couldn't find a gene with entrezID " + entrezId);
+            throw new AnnotationNotFoundException("Couldn't find a gene with entrezID " + entrezId);
         }
 
         if (totalHits > 1) {
-            String[] idBuf = new String[totalHits];
+            List<String> idBuf = new ArrayList<>();
             for(int i = 0; i < totalHits; i++) {
-                idBuf[i] =  (String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id");
+                idBuf.add((String)searchResponse.getHits().getAt(i).getSourceAsMap().get("id"));
             }
-            String msg = String.format("Found more than one gene for entrezID %s with the following ids: %s", entrezId, Joiner.on(",").join(idBuf));
-            throw new AnnotationException(msg);
+            throw new MultipleValuesException(entrezId, idBuf);
         }
         GeneInfo geneInfo =  getGeneInfo(entrezId, searchResponse);
         geneInfo.setTranscripts(getTranscriptsByGene(geneInfo.getId()));
@@ -92,12 +93,12 @@ public class GeneAnnotationExecutor {
         return geneInfo;
     }
 
-    public GeneInfo annotateGeneById(String id) throws AnnotationException, IOException {
+    public GeneInfo annotateGeneById(String id) throws AnnotationNotFoundException, IOException {
         SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"genes"}, "id", id), RequestOptions.DEFAULT);
 
         int totalHits = (int)searchResponse.getHits().getTotalHits().value;
         if (totalHits == 0) { //RsId not found
-            throw new AnnotationException("Couldn't find a gene with ensemble id " + id);
+            throw new AnnotationNotFoundException("Couldn't find a gene with ensemble id " + id);
         }
 
         if (totalHits > 1) {

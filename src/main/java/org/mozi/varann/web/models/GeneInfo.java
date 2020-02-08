@@ -1,11 +1,10 @@
-package org.mozi.varann.web.data;
+package org.mozi.varann.web.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mozi.varann.data.records.TranscriptRecord;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

@@ -1,4 +1,4 @@
-package org.mozi.varann.web.data;
+package org.mozi.varann.web.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

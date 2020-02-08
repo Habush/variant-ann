@@ -1,10 +1,9 @@
-package org.mozi.varann.web.data;
+package org.mozi.varann.web.models;
 
 import lombok.Data;
 import org.mozi.varann.data.records.ClinVarAnnotation;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>

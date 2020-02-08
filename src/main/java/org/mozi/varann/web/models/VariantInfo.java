@@ -1,4 +1,4 @@
-package org.mozi.varann.web.data;
+package org.mozi.varann.web.models;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>

@@ -1,8 +1,7 @@
-package org.mozi.varann.web.data;
+package org.mozi.varann.web.models;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.mozi.varann.data.records.ThousandGenomesRecord;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>

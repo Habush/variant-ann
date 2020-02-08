@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.mozi.varann.data.records.TranscriptRecord;
 import org.mozi.varann.services.GeneAnnotationExecutor;
 import org.mozi.varann.util.AnnotationException;
+import org.mozi.varann.util.AnnotationNotFoundException;
+import org.mozi.varann.util.MultipleValuesException;
 import org.mozi.varann.util.RegexPatterns;
-import org.mozi.varann.web.data.GeneInfo;
+import org.mozi.varann.web.models.GeneInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,21 +28,21 @@ public class GeneAnnotationController {
     @CrossOrigin
     @RequestMapping(value = "/annotate/gene/{gene}", method = RequestMethod.GET)
     @ResponseBody
-    public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationException, IOException {
+    public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         return annotationExec.annotateByGene(gene);
     }
 
     @CrossOrigin
     @RequestMapping(value = "/annotate/gene/entrez/{entrezID}", method = RequestMethod.GET)
     @ResponseBody
-    public GeneInfo annotateByEntrezID(@PathVariable String entrezID) throws AnnotationException, IOException {
+    public GeneInfo annotateByEntrezID(@PathVariable String entrezID) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         return annotationExec.annotateByEntrezId(entrezID);
     }
 
     @CrossOrigin
     @RequestMapping(value = "/annotate/gene/id/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public GeneInfo annotateByGeneId(@PathVariable String id) throws AnnotationException, IOException {
+    public GeneInfo annotateByGeneId(@PathVariable String id) throws AnnotationNotFoundException, IOException {
         return annotationExec.annotateGeneById(id);
     }
 
