@@ -57,10 +57,6 @@ public class VariantAnnotationExecutor {
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationNotFoundException("Couldn't find a variant with id " + id);
         }
-        if (searchResponse.getHits().getTotalHits().value > 1) {
-            List<String> vals = Lists.newArrayList(searchResponse.getHits().getHits()).stream().map(hit -> (String)hit.getSourceAsMap().get("hgvs")).collect(Collectors.toList());
-            throw new MultipleValuesException(id, vals);
-        }
         SearchHit hit = searchResponse.getHits().getAt(0);
         List<String> hgvs = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs"));
         if (hgvs.size() > 1) {
