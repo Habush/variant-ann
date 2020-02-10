@@ -221,7 +221,7 @@ public class GeneAnnotationExecutor {
         long end = (Integer) hit.getSourceAsMap().get("end");
         String contig = (String) hit.getSourceAsMap().get("chrom");
 
-        SearchRequest searchRequest = getRangeRequest(new String[]{"clinvar", "effect", "exac", "g1k", "dbnsfp", "gnomad_exome", "acmg", }, contig, start, end);
+        SearchRequest searchRequest = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "dbnsfp", "gnomad_exome", "acmg", }, contig, start, end);
         SearchResponse varResponse = client.search(searchRequest, RequestOptions.DEFAULT);
 
         if (varResponse.getHits().getTotalHits().value == 0) { //RsId not found
