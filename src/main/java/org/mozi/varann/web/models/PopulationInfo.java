@@ -13,4 +13,5 @@ public class PopulationInfo {
     private PopulationData thousandGenome;
     private PopulationData exac;
     private PopulationData gnomadExome;
+    private PopulationData gnomadGenome;
 }

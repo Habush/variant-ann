@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AminoAcidChange {
 
+    private String gene;
     private String transcriptId;
     private String exon;
     private String cdsChange;

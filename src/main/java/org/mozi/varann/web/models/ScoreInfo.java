@@ -17,6 +17,4 @@ public class ScoreInfo {
 
     private PredictedScore cadd;
     private PredictedScore mutationTaster;
-    private PredictedScore dann;
-    private PredictedScore vest4;
 }

@@ -7,7 +7,7 @@ import org.mozi.varann.util.AnnotationException;
 import org.mozi.varann.util.AnnotationNotFoundException;
 import org.mozi.varann.util.MultipleValuesException;
 import org.mozi.varann.util.RegexPatterns;
-import org.mozi.varann.web.models.GeneInfo;
+import org.mozi.varann.web.models.VariantInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,39 +28,18 @@ public class GeneAnnotationController {
     @CrossOrigin
     @RequestMapping(value = "/annotate/gene/{gene}", method = RequestMethod.GET)
     @ResponseBody
-    public GeneInfo annotateByGene(@PathVariable String gene) throws AnnotationNotFoundException, MultipleValuesException, IOException {
+    public List<VariantInfo> annotateByGene(@PathVariable String gene) throws AnnotationNotFoundException, IOException {
         return annotationExec.annotateByGene(gene);
     }
 
-    @CrossOrigin
-    @RequestMapping(value = "/annotate/gene/entrez/{entrezID}", method = RequestMethod.GET)
-    @ResponseBody
-    public GeneInfo annotateByEntrezID(@PathVariable String entrezID) throws AnnotationNotFoundException, MultipleValuesException, IOException {
-        return annotationExec.annotateByEntrezId(entrezID);
-    }
 
     @CrossOrigin
     @RequestMapping(value = "/annotate/gene/id/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public GeneInfo annotateByGeneId(@PathVariable String id) throws AnnotationNotFoundException, IOException {
+    public List<VariantInfo> annotateByGeneId(@PathVariable String id) throws AnnotationNotFoundException, IOException {
         return annotationExec.annotateGeneById(id);
     }
 
-    @CrossOrigin
-    @RequestMapping(value = "/annotate/gene/range/", method = RequestMethod.GET)
-    @ResponseBody
-    public List<GeneInfo> getGenesInRange(@RequestParam(value = "q") String query) throws IOException, AnnotationException {
-        Matcher match =  RegexPatterns.rangePattern.matcher(query);
-        if(match.matches()){
-            String contig = match.group(2);
-            long start = Long.parseLong(match.group(3));
-            long end = Long.parseLong(match.group(4));
-
-            return annotationExec.getGenesInRange(contig, start, end);
-        } else {
-            throw new AnnotationException("Unable to parse query " + query + " . Please check again");
-        }
-    }
 
     @CrossOrigin
     @RequestMapping(value = "/annotate/transcript/range/", method = RequestMethod.GET)

@@ -36,17 +36,11 @@ public class SearchUtils {
     }
 
     public static SearchRequest getSearchRequest(String[] indices, String field, String value) {
-        return getSearchRequest(indices, field, value, 0, 10);
-    }
-
-    public static SearchRequest getSearchRequest(String[] indices, String field, String value, int from, int size) {
         SearchRequest searchRequest = new SearchRequest(indices);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         var boolQuery = QueryBuilders.boolQuery();
         boolQuery.must().add(QueryBuilders.termQuery(field, value));
         sourceBuilder.query(boolQuery);
-        sourceBuilder.from(from);
-        sourceBuilder.size(size);
         searchRequest.source(sourceBuilder);
         return searchRequest;
     }
@@ -94,11 +88,24 @@ public class SearchUtils {
                     varInfo.setGene(record.getGene());
                     varInfo.setBioType(record.getBioType());
                     varInfo.setExonicFunction(record.getExonicFunction());
-                    varInfo.setEnsembleGenes(record.getEnsGene());
+                    varInfo.setEnsembleGenes(record.getGeneId());
                     varInfo.setEnsembleTranscripts(record.getEnsAAChange());
                     varInfo.setRefSeqTranscripts(record.getRefAAChange());
-                    varInfo.setAcmg(record.getIntervar());
                     varInfo.setId(record.getRsId());
+
+                    GnomadGenomeRecord gnomadGenomeRecord = record.getGnomeRecord();
+                    if(gnomadGenomeRecord != null) {
+                        for (GnomadExomePopulation pop : GnomadExomePopulation.values()) {
+                            PopulationData data = new PopulationData();
+                            data.setAF(gnomadGenomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadGenomeRecord.getAlleleFrequencies().get(pop) : -1);
+                            if (varInfo.getPopulation().get(pop.name()) == null) {
+                                PopulationInfo info = new PopulationInfo();
+                                varInfo.getPopulation().put(pop.name(), info);
+                            }
+                            varInfo.getPopulation().get(pop.name()).setGnomadGenome(data);
+                        }
+                    }
+
                     break;
 
                 case "g1k":
@@ -116,11 +123,6 @@ public class SearchUtils {
                         varInfo.getPopulation().get(pop.name()).setThousandGenome(data);
                     }
                     break;
-                case "dbnsfp":
-                    var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
-                    DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
-                    break;
                 case "gnomad_exome":
                     var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
                     GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
@@ -136,6 +138,11 @@ public class SearchUtils {
                         }
                         varInfo.getPopulation().get(pop.name()).setGnomadExome(data);
                     }
+                    break;
+                case "intervar":
+                    var intervarQuery = datastore.createQuery(IntervarRecord.class);
+                    IntervarRecord intervarRecord = intervarQuery.field("_id").equal(new ObjectId(id)).find().next();
+                    varInfo.setAcmg(intervarRecord);
                     break;
             }
 
@@ -189,11 +196,24 @@ public class SearchUtils {
                 varInfo.setGene(record.getGene());
                 varInfo.setBioType(record.getBioType());
                 varInfo.setExonicFunction(record.getExonicFunction());
-                varInfo.setEnsembleGenes(record.getEnsGene());
+                varInfo.setEnsembleGenes(record.getGeneId());
                 varInfo.setEnsembleTranscripts(record.getEnsAAChange());
                 varInfo.setRefSeqTranscripts(record.getRefAAChange());
-                varInfo.setAcmg(record.getIntervar());
                 varInfo.setId(record.getRsId());
+
+                GnomadGenomeRecord gnomadGenomeRecord = record.getGnomeRecord();
+                if(gnomadGenomeRecord != null){
+                    for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                        PopulationData data = new PopulationData();
+                        data.setAF(gnomadGenomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadGenomeRecord.getAlleleFrequencies().get(pop):-1);
+                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                            PopulationInfo info = new PopulationInfo();
+                            varInfo.getPopulation().put(pop.name(), info);
+                        }
+                        varInfo.getPopulation().get(pop.name()).setGnomadGenome(data);
+                    }
+                }
+
                 break;
 
             case "g1k":
@@ -211,11 +231,6 @@ public class SearchUtils {
                     varInfo.getPopulation().get(pop.name()).setThousandGenome(data);
                 }
                 break;
-            case "dbnsfp":
-                var dbnsfpQuery = datastore.createQuery(DBNSFPRecord.class);
-                DBNSFPRecord dbnsfpRec = dbnsfpQuery.field("_id").equal(new ObjectId(id)).find().next();
-                varInfo.setScores(getScoreInfo(hgvs, dbnsfpRec));
-                break;
             case "gnomad_exome":
                 var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
                 GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
@@ -231,6 +246,12 @@ public class SearchUtils {
                     }
                     varInfo.getPopulation().get(pop.name()).setGnomadExome(data);
                 }
+                break;
+
+            case "intervar":
+                var intervarQuery = datastore.createQuery(IntervarRecord.class);
+                IntervarRecord intervarRecord = intervarQuery.field("_id").equal(new ObjectId(id)).find().next();
+                varInfo.setAcmg(intervarRecord);
                 break;
         }
 
@@ -250,29 +271,11 @@ public class SearchUtils {
 
     public static ScoreInfo getScoreInfo(String hgvs, DBNSFPRecord record) {
         ScoreInfo scoreInfo = new ScoreInfo();
-        int index = record.getHgvs().indexOf(hgvs);
-        if (record.getSift() != null && record.getSift().size() > 0) {
-            scoreInfo.setSift(new PredictedScore(record.getSift().get(index), record.getSiftPred().get(index)));
-        }
-        if (record.getLrt() != null && record.getLrt().size() > 0) {
-            scoreInfo.setLrt(new PredictedScore(record.getLrt().get(index), record.getLrtPred().get(index)));
-        }
-        if (record.getPolyphen2() != null && record.getPolyphen2().size() > 0) {
-            scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2().get(index), record.getPolyphen2Pred().get(index)));
-        }
-
-        if (record.getCadd() != null && record.getCadd().size() > 0) {
-            scoreInfo.setCadd(new PredictedScore(record.getCadd().get(index), null));
-        }
-        if (record.getDann() != null && record.getCadd().size() > 0) {
-            scoreInfo.setDann(new PredictedScore(record.getDann().get(index), null));
-        }
-        if (record.getMutationTaster() != null && record.getMutationTaster().size() > 0) {
-            scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster().get(index), null));
-        }
-        if (record.getVest4() != null && record.getVest4().size() > 0) {
-            scoreInfo.setVest4(new PredictedScore(record.getVest4().get(index), null));
-        }
+        scoreInfo.setCadd(new PredictedScore(record.getCadd(), null));
+        scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster(), record.getMutationTasterPred()));
+        scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2(), null));
+        scoreInfo.setLrt(new PredictedScore(record.getLrt(), record.getLrtPred()));
+        scoreInfo.setSift(new PredictedScore(record.getSift(), record.getSiftPred() ));
 
         return scoreInfo;
     }

@@ -1,21 +1,26 @@
 {
   "properties": {
-    "id": {
+    "alt": {
       "type": "keyword"
     },
     "chrom": {
       "type": "keyword"
     },
-    "start": {
-      "type": "long"
-    },
-    "end": {
-      "type": "long"
-    },
-    "symbol": {
+    "hgvs": {
       "type": "keyword"
     },
-    "entrezID": {
+    "pos": {
+      "type": "long"
+    },
+    "ref": {
+      "type": "keyword"
+
+    },
+    "gene": {
+      "type": "keyword"
+    },
+
+    "geneId": {
       "type": "keyword"
     }
   }

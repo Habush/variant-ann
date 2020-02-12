@@ -11,9 +11,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import lombok.RequiredArgsConstructor;
 import lombok.var;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,11 +21,10 @@ import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.mozi.varann.data.impl.annotation.VariantRecordConverter;
 import org.mozi.varann.data.impl.clinvar.ClinVarVariantContextToRecordConverter;
-import org.mozi.varann.data.impl.dbnsfp.DBNSFPRecordConverter;
 import org.mozi.varann.data.impl.exac.ExacVariantContextToRecordConverter;
 import org.mozi.varann.data.impl.g1k.ThousandGenomesVariantContextToRecordConverter;
-import org.mozi.varann.data.impl.genes.GeneRecordConverter;
 import org.mozi.varann.data.impl.gnomad.GnomadExomeRecordConverter;
+import org.mozi.varann.data.impl.intervar.IntervarRecordConverter;
 import org.mozi.varann.data.impl.transcript.TranscriptRecordConverter;
 import org.mozi.varann.data.records.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -116,16 +112,16 @@ public class DataLoader {
             return null;
         };
         tasks.add(g1kTask);
-        Callable<Void> dbnsfpTask = () -> {
+        Callable<Void> variantsTask = () -> {
             try {
-                addDBNSFPRecords();
-                logger.info("Finished adding DBNSFP records");
+                addVariantRecords();
+                logger.info("Finished adding Variant records");
             } catch (Exception e) {
                 logger.catching(e);
             }
             return null;
         };
-        tasks.add(dbnsfpTask);
+        tasks.add(variantsTask);
 
         Callable<Void> interVarTask = () -> {
             try {
@@ -137,18 +133,6 @@ public class DataLoader {
             return null;
         };
         tasks.add(interVarTask);
-
-        Callable<Void> genesTask = () -> {
-            try {
-                addGeneRecord();
-                logger.info("Finished adding Genes");
-            } catch (Exception e) {
-                logger.catching(e);
-            }
-
-            return null;
-        };
-        tasks.add(genesTask);
 
         Callable<Void> gnomadTask = () -> {
             try {
@@ -246,81 +230,12 @@ public class DataLoader {
         }
     }
 
-    private void addDBNSFPRecords() throws IOException {
-        Query<DBNSFPRecord> query = datastore.createQuery(DBNSFPRecord.class);
-        if (query.count() == 0) {
-            logger.info("Adding DBNSFP Records...");
-            if (prod) {
-                //Add from chr1-22
-                for (int i = 1; i < 23; i++) {
-                    logger.info("Adding Records for chr" + i);
-                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%d.gz", i));
-                    addDBNSFPRecord(filename);
-                }
-                //Add chr X, Y, M
-                for (String chr : chrs) {
-                    logger.info("Adding Records for chr" + chr);
-                    String filename = PathUtil.join(basePath, "dbNSFP4c", String.format("dbNSFP4.0b2c_variant.chr%s.gz", chr));
-                    addDBNSFPRecord(filename);
-                }
-            } else {
-                addDBNSFPRecord(PathUtil.join(basePath, "vcfs", "dbNSFP_sample_chr1.tsv.gz"));
-            }
-        }
-
-    }
-
-    private void addDBNSFPRecord(String fileName) throws IOException {
-        try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
-             BufferedReader reader = new BufferedReader(decoder)) {
-
-            DBNSFPRecordConverter converter = new DBNSFPRecordConverter();
-            DBNSFPRecord dbnsfpRecord = null;
-            reader.readLine(); //read the columns
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                DBNSFPRecord record = converter.convert(line, referenceDictionary);
-                if (dbnsfpRecord != null) {
-                    if (record.getChrom().equals(dbnsfpRecord.getChrom())
-                            && record.getRef().equals(dbnsfpRecord.getRef()) && record.getPos() == dbnsfpRecord.getPos()) {
-                        //If it is the same variant with d/t allele just update the scores
-                        dbnsfpRecord.copy(record);
-                    } else {
-                        datastore.save(dbnsfpRecord);
-                        dbnsfpRecord = record;
-                    }
-                } else {
-                    dbnsfpRecord = record;
-                    datastore.save(dbnsfpRecord);
-                }
-            }
-        }
-    }
-
-    private void addGeneRecord() throws IOException {
-        Query<GeneRecord> query = datastore.createQuery(GeneRecord.class);
-        if (query.count() == 0) {
-            logger.info("Adding Gene records");
-
-            String fileName = PathUtil.join(basePath, "genes.tsv");
-
-            try (CSVParser parser = CSVFormat.TDF.withHeader().parse(Files.newBufferedReader(Paths.get(fileName)))) {
-                GeneRecordConverter converter = new GeneRecordConverter();
-                for (CSVRecord record : parser.getRecords()) {
-                    datastore.save(converter.convert(record, referenceDictionary));
-                }
-
-            }
-        }
-    }
-
     private void addInterVarRecords() throws IOException, InterruptedException {
-        Query<VariantRecord> query = datastore.createQuery(VariantRecord.class);
+        Query<IntervarRecord> query = datastore.createQuery(IntervarRecord.class);
         if(query.count() == 0){
             if(prod) {
                 ExecutorService exeService = Executors.newFixedThreadPool(3);
-                List<Path> intervarPaths = Files.list(Paths.get(basePath, "intervar")).collect(Collectors.toList());
-                intervarPaths.sort(Path::compareTo);
+                List<Path> intervarPaths = Files.list(Paths.get(basePath, "intervar")).sorted(Path::compareTo).collect(Collectors.toList());
                 logger.info("Total files: " + intervarPaths.size());
                 List<List<Path>> outerList = Lists.partition(intervarPaths, 100);
                 logger.info("Outer List size: " + outerList.size());
@@ -331,7 +246,7 @@ public class DataLoader {
                      BufferedReader reader = new BufferedReader(decoder)) {
                     logger.info("Adding ACMG Records");
 
-                    VariantRecordConverter converter = new VariantRecordConverter();
+                    IntervarRecordConverter converter = new IntervarRecordConverter();
                     reader.readLine(); //read the columns
                     String line = null;
                     while ((line = reader.readLine()) != null) {
@@ -347,6 +262,53 @@ public class DataLoader {
             try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
                  BufferedReader reader = new BufferedReader(decoder)) {
                 logger.info("Adding ACMG Records for " + path.toString());
+
+                IntervarRecordConverter converter = new IntervarRecordConverter();
+                reader.readLine(); //read the columns
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    datastore.save(converter.convert(line, referenceDictionary));
+                }
+            }
+            catch (IOException e) {
+                logger.error("Couldn't load file: " + path.toString());
+            }
+        }
+
+    }
+
+    private void addVariantRecords() throws IOException, InterruptedException {
+        Query<VariantRecord> query = datastore.createQuery(VariantRecord.class);
+        if(query.count() == 0){
+            if(prod) {
+                ExecutorService exeService = Executors.newFixedThreadPool(3);
+                List<Path> intervarPaths = Files.list(Paths.get(basePath, "annovar", "result")).sorted(Path::compareTo).collect(Collectors.toList());
+                logger.info("Total files: " + intervarPaths.size());
+                List<List<Path>> outerList = Lists.partition(intervarPaths, 100);
+                logger.info("Outer List size: " + outerList.size());
+                outerList.parallelStream().forEach(this::addVariantRecords);
+            } else {
+                String fileName = PathUtil.join(basePath, "vcfs", "variants.tsv.gz");
+                try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName)));
+                     BufferedReader reader = new BufferedReader(decoder)) {
+                    logger.info("Adding Variant Records");
+
+                    VariantRecordConverter converter = new VariantRecordConverter();
+                    reader.readLine(); //read the columns
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        datastore.save(converter.convert(line, referenceDictionary));
+                    }
+                }
+            }
+        }
+    }
+
+    private void addVariantRecords(List<Path> paths) {
+        for(Path path :  paths){
+            try (Reader decoder = new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())));
+                 BufferedReader reader = new BufferedReader(decoder)) {
+                logger.info("Adding Variant Records for " + path.toString());
 
                 VariantRecordConverter converter = new VariantRecordConverter();
                 reader.readLine(); //read the columns

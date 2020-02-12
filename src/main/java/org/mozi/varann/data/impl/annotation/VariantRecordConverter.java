@@ -6,10 +6,7 @@ import de.charite.compbio.jannovar.reference.GenomeVariant;
 import de.charite.compbio.jannovar.reference.PositionType;
 import de.charite.compbio.jannovar.reference.Strand;
 import org.mozi.varann.data.impl.TSVToRecordConverter;
-import org.mozi.varann.data.records.IntervarRecord;
-import org.mozi.varann.data.records.VariantRecord;
-import org.mozi.varann.data.records.AminoAcidChange;
-import org.mozi.varann.data.records.OrphaDiseaseInfo;
+import org.mozi.varann.data.records.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,98 +23,41 @@ public class VariantRecordConverter implements TSVToRecordConverter<VariantRecor
         String[] records = line.split("\\t");
         VariantRecord builder = new VariantRecord();
 
+
         builder.setChrom(records[0]);
         builder.setPos(Integer.parseInt(records[1]));
         builder.setRef(records[3]);
-        builder.getAlt().add(records[4]);
-        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(builder.getChrom()), (int) builder.getPos(), PositionType.ONE_BASED), builder.getRef(), records[4]);
-        builder.getHgvs().add(variant.toString());
+        builder.setAlt(records[4]);
+        String hgvsRef = builder.getRef().equals("-") ? "" : builder.getRef();
+        String hgvsAlt = builder.getAlt().equals("-") ? "" : builder.getAlt();
+
+        GenomeVariant variant = new GenomeVariant(new GenomePosition(refDict, Strand.FWD, refDict.getContigNameToID().get(builder.getChrom()), (int) builder.getPos(), PositionType.ONE_BASED), hgvsRef, hgvsAlt);
+        builder.setHgvs(variant.toString());
 
         //rsId;
-        builder.setRsId(records[9]);
-        builder.setGene(records[5]);
+        builder.setRsId(records[15]);
+        builder.setGene(records[6]);
         //biotype
-        builder.setBioType(records[6]);
+        builder.setBioType(records[5]);
         //Exonic Function
-        builder.setExonicFunction(records[7]);
-        if (!records[8].equals(".")) {
-            List<String> ensGenes = Arrays.stream(records[8].split(",")).filter(e -> !e.equalsIgnoreCase("none")).collect(Collectors.toList());
-            builder.setEnsGene(ensGenes);
+        builder.setExonicFunction(records[8]);
+        if (!records[11].equals(".")) {
+            List<String> ensGenes = Arrays.stream(records[11].split(",")).filter(e -> !e.equalsIgnoreCase("none")).collect(Collectors.toList());
+            builder.setGeneId(ensGenes);
         }
 
         //aachanges
-        if (!records[10].equals(".")) {
-            builder.setEnsAAChange(parseAAChanges(records[10]));
+        if (!records[14].equals(".")) {
+            builder.setEnsAAChange(parseAAChanges(records[14]));
         }
-        if (!records[11].equals(".")) {
-            builder.setRefAAChange(parseAAChanges(records[11]));
-        }
-
-        IntervarRecord intervarBuilder = new IntervarRecord();
-        intervarBuilder.setVerdict(records[13].trim());
-
-        String[] evidences = records[14].split(";");
-
-        for (String evidence : evidences) {
-            String[] parts = evidence.split("=");
-            String criteria = parts[0];
-            String evi = parts[1];
-            switch (criteria) {
-                case "PVS1":
-                    intervarBuilder.setPvs1(Integer.parseInt(evi));
-                    break;
-                case "PS":
-                    intervarBuilder.setPs(convertToArray(evi));
-                    break;
-                case "PM":
-                    intervarBuilder.setPm(convertToArray(evi));
-                    break;
-                case "PP":
-                    intervarBuilder.setPp(convertToArray(evi));
-                    break;
-                case "BA1":
-                    intervarBuilder.setBa1(Integer.parseInt(evi));
-                    break;
-                case "BS":
-                    intervarBuilder.setBs(convertToArray(evi));
-                    break;
-                case "BP":
-                    intervarBuilder.setBp(convertToArray(evi));
-                    break;
-                default:
-                    throw new RuntimeException("Unknown criteria " + criteria);
-
-            }
+        if (!records[9].equals(".")) {
+            builder.setRefAAChange(parseAAChanges(records[0]));
         }
 
-        //Orpha info
-        String[] orphaInfo = records[33].split("~");
+        builder.setGnomeRecord(parseGnomadInfo(records));
+        builder.setDbnsfpRecord(parseDBNSFPInfo(records));
 
-        List<OrphaDiseaseInfo> orphaDiseaseInfos = new ArrayList<>();
-        for (String info : orphaInfo) {
-            String[] details = info.split("\\|");
-            if (details.length >= 6) {
-                OrphaDiseaseInfo diseaseInfo = new OrphaDiseaseInfo(details[0], details[1],
-                        details[2], details[3], details[4], details[5].split(" "));
-                orphaDiseaseInfos.add(diseaseInfo);
-            }
-        }
-
-        intervarBuilder.setDiseaseInfos(orphaDiseaseInfos);
-
-        builder.setIntervar(intervarBuilder);
         return builder;
-    }
-
-    private int[] convertToArray(String arr) {
-        String[] items = arr.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\s", "").split(",");
-
-        int[] results = new int[items.length];
-
-        for (int i = 0; i < items.length; i++) {
-            results[i] = Integer.parseInt(items[i]);
-        }
-        return results;
     }
 
     private List<AminoAcidChange> parseAAChanges(String record) {
@@ -126,11 +66,70 @@ public class VariantRecordConverter implements TSVToRecordConverter<VariantRecor
         String[] transcripts = record.split(",");
         for (String trans : transcripts) {
             String[] components = trans.split(":");
-            if(components.length == 5){
-                aaChanges.add(new AminoAcidChange(components[1], components[2], components[3], components[4]));
+            if (components.length == 5) {
+                aaChanges.add(new AminoAcidChange(components[0], components[1], components[2], components[3], components[4]));
             }
         }
 
         return aaChanges;
+    }
+
+    private GnomadGenomeRecord parseGnomadInfo(String[] records) {
+        GnomadGenomeRecord genomeRecord = new GnomadGenomeRecord();
+
+        if (!records[17].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.all, Double.parseDouble(records[17]));
+        }
+        if (!records[22].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.afr, Double.parseDouble(records[22]));
+        }
+        if (!records[23].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.sas, Double.parseDouble(records[23]));
+        }
+        if (!records[24].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.amr, Double.parseDouble(records[24]));
+        }
+        if (!records[25].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.eas, Double.parseDouble(records[25]));
+        }
+        if (!records[26].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.nfe, Double.parseDouble(records[26]));
+        }
+        if (!records[27].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.fin, Double.parseDouble(records[27]));
+        }
+        if (!records[28].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.asj, Double.parseDouble(records[28]));
+        }
+        if (!records[29].equals(".")) {
+            genomeRecord.getAlleleFrequencies().put(GnomadExomePopulation.oth, Double.parseDouble(records[29]));
+        }
+
+        return genomeRecord;
+
+    }
+
+    private DBNSFPRecord parseDBNSFPInfo(String[] records) {
+        DBNSFPRecord dbnsfpRecord = new DBNSFPRecord();
+        if(!records[51].equals(".")){
+            dbnsfpRecord.setSift(Double.parseDouble(records[51]));
+            dbnsfpRecord.setSiftPred(records[53]);
+        }
+        if(!records[54].equals(".")){
+            dbnsfpRecord.setLrt(Double.parseDouble(records[54]));
+            dbnsfpRecord.setLrtPred(records[56]);
+        }
+        if(!records[57].equals(".")){
+            dbnsfpRecord.setMutationTaster(Double.parseDouble(records[57]));
+            dbnsfpRecord.setMutationTasterPred(records[59]);
+        }
+        if(!records[127].equals(".")){
+            dbnsfpRecord.setPolyphen2(Double.parseDouble(records[127]));
+        }
+        if(!records[143].equals(".")){
+            dbnsfpRecord.setCadd(Double.parseDouble(records[143]));
+        }
+
+        return dbnsfpRecord;
     }
 }

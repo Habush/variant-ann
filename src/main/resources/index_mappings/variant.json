@@ -25,6 +25,9 @@
 
     "gene": {
       "type": "keyword"
+    },
+    "geneId": {
+      "type": "keyword"
     }
   }
 }
