@@ -45,7 +45,7 @@ public class GeneAnnotationExecutor {
 
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateByGene(String gene) throws AnnotationNotFoundException, IOException {
-        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"intervar", "variant"}, "gene", gene), RequestOptions.DEFAULT);
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"intervar", "variant"}, new String[]{"gene"}, new String[]{gene}), RequestOptions.DEFAULT);
 
         int totalHits = (int) searchResponse.getHits().getTotalHits().value;
         if (totalHits == 0) { //RsId not found
@@ -62,7 +62,7 @@ public class GeneAnnotationExecutor {
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateGeneById(String id) throws AnnotationNotFoundException, IOException {
 
-        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant", "intervar"}, "geneId", id), RequestOptions.DEFAULT);
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant", "intervar"}, new String[]{"geneId"}, new String[]{id}), RequestOptions.DEFAULT);
 
         int totalHits = (int) searchResponse.getHits().getTotalHits().value;
         if (totalHits == 0) { //RsId not found

@@ -52,7 +52,7 @@ public class VariantAnnotationExecutor {
     @SuppressWarnings("unchecked")
     public VariantInfo annotateId(String id) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         //Query dbSNP for the id;
-        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant"}, "rsId", id), RequestOptions.DEFAULT);
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant"}, new String[]{"rsId"}, new String[]{id}), RequestOptions.DEFAULT);
 
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationNotFoundException("Couldn't find a variant with id " + id);
@@ -60,19 +60,29 @@ public class VariantAnnotationExecutor {
         SearchHit hit = searchResponse.getHits().getAt(0);
         String hgvs = (String) hit.getSourceAsMap().get("hgvs");
 
-        searchResponse = client.search(getSearchRequest(indices, "hgvs", hgvs), RequestOptions.DEFAULT);
+        searchResponse = client.search(getSearchRequest(indices, new String[]{"hgvs"}, new String[]{hgvs}), RequestOptions.DEFAULT);
 
         return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
     }
 
     public VariantInfo annotateHgvs(String hgvs) throws AnnotationNotFoundException, IOException {
 
-        var searchResponse = client.search(getSearchRequest(indices, "hgvs", hgvs), RequestOptions.DEFAULT);
+        var searchResponse = client.search(getSearchRequest(indices, new String[]{"hgvs"}, new String[]{hgvs}), RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationNotFoundException("Couldn't find a variant with hgvs id " + hgvs);
         }
 
         return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
+    }
+
+    public VariantInfo annotateChangeString(String chrom, String pos, String ref, String alt) throws AnnotationNotFoundException, IOException {
+        SearchResponse searchResponse = client.search(getSearchRequest(new String[]{"variant"}, new String[]{"chrom", "pos", "ref", "alt"}, new String[]{chrom, pos, ref, alt}), RequestOptions.DEFAULT);
+
+        if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
+            throw new AnnotationNotFoundException(String.format("Couldn't find a variant  %s:%s:%s:%s", chrom, pos, ref, alt));
+        };
+
+        return annotateHgvs((String)searchResponse.getHits().getAt(0).getSourceAsMap().get("hgvs"));
     }
 
     /**

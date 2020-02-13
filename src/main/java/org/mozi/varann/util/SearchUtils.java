@@ -35,11 +35,17 @@ public class SearchUtils {
         return searchRequest;
     }
 
-    public static SearchRequest getSearchRequest(String[] indices, String field, String value) {
+    public static SearchRequest getSearchRequest(String[] indices, String[] fields, String[] value)  {
+        if(fields.length != value.length) {
+            throw new IllegalArgumentException("fields and values size must be equal");
+        }
         SearchRequest searchRequest = new SearchRequest(indices);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         var boolQuery = QueryBuilders.boolQuery();
-        boolQuery.must().add(QueryBuilders.termQuery(field, value));
+        for(int i = 0; i < fields.length; i++){
+            boolQuery.must().add(QueryBuilders.termQuery(fields[i], value[i]));
+        }
+
         sourceBuilder.query(boolQuery);
         searchRequest.source(sourceBuilder);
         return searchRequest;
