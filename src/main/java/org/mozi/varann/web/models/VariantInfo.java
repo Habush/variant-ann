@@ -64,6 +64,6 @@ public class VariantInfo {
      */
     private ScoreInfo scores;
 
-    private IntervarRecord acmg;
+    private IntervarRecord acmg = new IntervarRecord();
 
 }
