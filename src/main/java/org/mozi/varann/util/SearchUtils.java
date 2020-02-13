@@ -51,12 +51,21 @@ public class SearchUtils {
         for (var hit : hits) {
             String index = hit.getIndex();
             String id = hit.getId();
-            int hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
-            String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
-            if (varInfo.getAlt() == null) {
-                varInfo.setAlt(alt);
+
+            int hgvsIndex = 0;
+            if( hit.getSourceAsMap().get("hgvs") instanceof ArrayList){
+                hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
+                String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
+                if (varInfo.getAlt() == null) {
+                    varInfo.setAlt(alt);
+                    varInfo.setHgvs(hgvs);
+                }
+            } else {
                 varInfo.setHgvs(hgvs);
+                varInfo.setAlt((String) hit.getSourceAsMap().get("alt"));
             }
+
+
             switch (index) {
                 case "clinvar":
                     var clinvarQuery = datastore.createQuery(ClinVarRecord.class);
@@ -105,6 +114,8 @@ public class SearchUtils {
                             varInfo.getPopulation().get(pop.name()).setGnomadGenome(data);
                         }
                     }
+
+                    varInfo.setScores(getScoreInfo(record.getDbnsfpRecord()));
 
                     break;
 
@@ -159,11 +170,17 @@ public class SearchUtils {
         VariantInfo varInfo = new VariantInfo();
         String index = hit.getIndex();
         String id = hit.getId();
-        int hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
-        String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
-        if (varInfo.getAlt() == null) {
-            varInfo.setAlt(alt);
+        int hgvsIndex = 0;
+        if( hit.getSourceAsMap().get("hgvs") instanceof ArrayList){
+            hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
+            String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
+            if (varInfo.getAlt() == null) {
+                varInfo.setAlt(alt);
+                varInfo.setHgvs(hgvs);
+            }
+        } else {
             varInfo.setHgvs(hgvs);
+            varInfo.setAlt((String) hit.getSourceAsMap().get("alt"));
         }
         switch (index) {
             case "clinvar":
@@ -189,6 +206,7 @@ public class SearchUtils {
                     }
                     varInfo.getPopulation().get(pop.name()).setExac(data);
                 }
+
                 break;
             case "variant":
                 var varQuery = datastore.createQuery(VariantRecord.class);
@@ -213,6 +231,8 @@ public class SearchUtils {
                         varInfo.getPopulation().get(pop.name()).setGnomadGenome(data);
                     }
                 }
+
+                varInfo.setScores(getScoreInfo(record.getDbnsfpRecord()));
 
                 break;
 
@@ -269,14 +289,19 @@ public class SearchUtils {
         varInfo.setRef((String) hit.getSourceAsMap().get("ref"));
     }
 
-    public static ScoreInfo getScoreInfo(String hgvs, DBNSFPRecord record) {
-        ScoreInfo scoreInfo = new ScoreInfo();
-        scoreInfo.setCadd(new PredictedScore(record.getCadd(), null));
-        scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster(), record.getMutationTasterPred()));
-        scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2(), null));
-        scoreInfo.setLrt(new PredictedScore(record.getLrt(), record.getLrtPred()));
-        scoreInfo.setSift(new PredictedScore(record.getSift(), record.getSiftPred() ));
+    public static ScoreInfo getScoreInfo(DBNSFPRecord record) {
+        if(record != null){
+            ScoreInfo scoreInfo = new ScoreInfo();
+            scoreInfo.setCadd(new PredictedScore(record.getCadd(), null));
+            scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster(), record.getMutationTasterPred()));
+            scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2(), null));
+            scoreInfo.setLrt(new PredictedScore(record.getLrt(), record.getLrtPred()));
+            scoreInfo.setSift(new PredictedScore(record.getSift(), record.getSiftPred() ));
 
-        return scoreInfo;
+            return scoreInfo;
+        }
+
+        return null;
+
     }
 }

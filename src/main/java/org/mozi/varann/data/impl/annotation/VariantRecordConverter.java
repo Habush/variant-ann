@@ -51,7 +51,7 @@ public class VariantRecordConverter implements TSVToRecordConverter<VariantRecor
             builder.setEnsAAChange(parseAAChanges(records[14]));
         }
         if (!records[9].equals(".")) {
-            builder.setRefAAChange(parseAAChanges(records[0]));
+            builder.setRefAAChange(parseAAChanges(records[9]));
         }
 
         builder.setGnomeRecord(parseGnomadInfo(records));

@@ -58,14 +58,11 @@ public class VariantAnnotationExecutor {
             throw new AnnotationNotFoundException("Couldn't find a variant with id " + id);
         }
         SearchHit hit = searchResponse.getHits().getAt(0);
-        List<String> hgvs = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs"));
-        if (hgvs.size() > 1) {
-            throw new MultipleValuesException(id, hgvs);
-        }
+        String hgvs = (String) hit.getSourceAsMap().get("hgvs");
 
-        searchResponse = client.search(getSearchRequest(indices, "hgvs", hgvs.get(0)), RequestOptions.DEFAULT);
+        searchResponse = client.search(getSearchRequest(indices, "hgvs", hgvs), RequestOptions.DEFAULT);
 
-        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs.get(0));
+        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
     }
 
     public VariantInfo annotateHgvs(String hgvs) throws AnnotationNotFoundException, IOException {
