@@ -43,7 +43,7 @@ public class SearchUtils {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         var boolQuery = QueryBuilders.boolQuery();
         for(int i = 0; i < fields.length; i++){
-            boolQuery.must().add(QueryBuilders.termQuery(fields[i], value[i]));
+            boolQuery.must(QueryBuilders.matchQuery(fields[i], value[i]));
         }
 
         sourceBuilder.query(boolQuery);
