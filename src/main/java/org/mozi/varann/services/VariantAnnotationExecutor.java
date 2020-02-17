@@ -49,6 +49,7 @@ public class VariantAnnotationExecutor {
     private String[] indices;
 
     private static final Logger logger = LogManager.getLogger(VariantAnnotationExecutor.class);
+
     @SuppressWarnings("unchecked")
     public VariantInfo annotateId(String id) throws AnnotationNotFoundException, MultipleValuesException, IOException {
         //Query dbSNP for the id;
@@ -62,7 +63,7 @@ public class VariantAnnotationExecutor {
 
         searchResponse = client.search(getSearchRequest(indices, new String[]{"hgvs"}, new String[]{hgvs}), RequestOptions.DEFAULT);
 
-        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
+        return buildVariantInfo(datastore, searchResponse.getHits(), hgvs);
     }
 
     public VariantInfo annotateHgvs(String hgvs) throws AnnotationNotFoundException, IOException {
@@ -72,7 +73,7 @@ public class VariantAnnotationExecutor {
             throw new AnnotationNotFoundException("Couldn't find a variant with hgvs id " + hgvs);
         }
 
-        return buildVariantInfo(datastore ,searchResponse.getHits(), hgvs);
+        return buildVariantInfo(datastore, searchResponse.getHits(), hgvs);
     }
 
     public VariantInfo annotateChangeString(String chrom, String pos, String ref, String alt) throws AnnotationNotFoundException, IOException {
@@ -80,9 +81,10 @@ public class VariantAnnotationExecutor {
 
         if (searchResponse.getHits().getTotalHits().value == 0) { //RsId not found
             throw new AnnotationNotFoundException(String.format("Couldn't find a variant  %s:%s:%s:%s", chrom, pos, ref, alt));
-        };
+        }
+        ;
 
-        return annotateHgvs((String)searchResponse.getHits().getAt(0).getSourceAsMap().get("hgvs"));
+        return annotateHgvs((String) searchResponse.getHits().getAt(0).getSourceAsMap().get("hgvs"));
     }
 
     /**
@@ -94,12 +96,12 @@ public class VariantAnnotationExecutor {
         List<String> notFound = new ArrayList<>();
         Map<String, List<String>> multiVals = new HashMap<>();
         List<VariantInfo> result = new ArrayList<>();
-        for(String id: ids){
-            try{
+        for (String id : ids) {
+            try {
                 result.add(annotateId(id));
-            } catch (AnnotationNotFoundException ex){
+            } catch (AnnotationNotFoundException ex) {
                 notFound.add(id);
-            } catch (MultipleValuesException ex){
+            } catch (MultipleValuesException ex) {
                 multiVals.put(ex.getReq(), ex.getValues());
             }
 
@@ -111,7 +113,7 @@ public class VariantAnnotationExecutor {
 
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateByRange(String chr, long start, long end, int limit) throws IOException {
-        SearchRequest request = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "dbnsfp"}, chr, start, end);
+        SearchRequest request = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "intervar", "gnomad_exome"}, chr, start, end);
         request.source().size(limit);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
@@ -120,14 +122,19 @@ public class VariantAnnotationExecutor {
 
         List<VariantInfo> varInfos = new ArrayList<>();
         for (SearchHit varHit : searchResponse.getHits()) {
-            List<String> hgvs = ((ArrayList<String>) varHit.getSourceAsMap().get("hgvs"));
-            if (hgvs.size() > 1) {
-                for (var hgv : hgvs) {
-                    varInfos.add(buildVariantInfo(datastore,varHit, hgv));
+            if (varHit.getSourceAsMap().get("hgvs") instanceof ArrayList) {
+                List<String> hgvs = ((ArrayList<String>) varHit.getSourceAsMap().get("hgvs"));
+                if (hgvs.size() > 1) {
+                    for (var hgv : hgvs) {
+                        varInfos.add(buildVariantInfo(datastore, varHit, hgv));
+                    }
+                } else {
+                    varInfos.add(buildVariantInfo(datastore, varHit, hgvs.get(0)));
                 }
             } else {
-                varInfos.add(buildVariantInfo(datastore,varHit, hgvs.get(0)));
+                varInfos.add(buildVariantInfo(datastore, varHit, (String)varHit.getSourceAsMap().get("hgvs")));
             }
+
         }
         return varInfos;
     }
