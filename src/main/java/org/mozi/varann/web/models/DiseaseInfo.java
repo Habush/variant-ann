@@ -4,6 +4,8 @@ import lombok.Data;
 import org.mozi.varann.data.records.ClinVarAnnotation;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -14,5 +16,5 @@ public class DiseaseInfo {
 
     private ClinVarAnnotation annotation;
 
-    private Collection<String> pumeds;
+    private List<Map<String, String>> pumeds;
 }

@@ -1,0 +1,709 @@
+<?xml version="1.0" ?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2019//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd">
+<PubmedArticleSet>
+    <PubmedArticle>
+        <MedlineCitation Status="MEDLINE" Owner="NLM">
+            <PMID Version="1">28492532</PMID>
+            <DateCompleted>
+                <Year>2018</Year>
+                <Month>06</Month>
+                <Day>04</Day>
+            </DateCompleted>
+            <DateRevised>
+                <Year>2020</Year>
+                <Month>01</Month>
+                <Day>08</Day>
+            </DateRevised>
+            <Article PubModel="Print-Electronic">
+                <Journal>
+                    <ISSN IssnType="Electronic">1530-0366</ISSN>
+                    <JournalIssue CitedMedium="Internet">
+                        <Volume>19</Volume>
+                        <Issue>10</Issue>
+                        <PubDate>
+                            <Year>2017</Year>
+                            <Month>10</Month>
+                        </PubDate>
+                    </JournalIssue>
+                    <Title>Genetics in medicine : official journal of the American College of Medical Genetics</Title>
+                    <ISOAbbreviation>Genet. Med.</ISOAbbreviation>
+                </Journal>
+                <ArticleTitle>Sherloc: a comprehensive refinement of the ACMG-AMP variant classification criteria.</ArticleTitle>
+                <Pagination>
+                    <MedlinePgn>1105-1117</MedlinePgn>
+                </Pagination>
+                <ELocationID EIdType="doi" ValidYN="Y">10.1038/gim.2017.37</ELocationID>
+                <Abstract>
+                    <AbstractText>PurposeThe 2015 American College of Medical Genetics and Genomics-Association for Molecular Pathology (ACMG-AMP) guidelines were a major step toward establishing a common framework for variant classification. In practice, however, several aspects of the guidelines lack specificity, are subject to varied interpretations, or fail to capture relevant aspects of clinical molecular genetics. A simple implementation of the guidelines in their current form is insufficient for consistent and comprehensive variant classification.MethodsWe undertook an iterative process of refining the ACMG-AMP guidelines. We used the guidelines to classify more than 40,000 clinically observed variants, assessed the outcome, and refined the classification criteria to capture exceptions and edge cases. During this process, the criteria evolved through eight major and minor revisions.ResultsOur implementation: (i) separated ambiguous ACMG-AMP criteria into a set of discrete but related rules with refined weights; (ii) grouped certain criteria to protect against the overcounting of conceptually related evidence; and (iii) replaced the &quot;clinical criteria&quot; style of the guidelines with additive, semiquantitative criteria.ConclusionSherloc builds on the strong framework of 33 rules established by the ACMG-AMP guidelines and introduces 108 detailed refinements, which support a more consistent and transparent approach to variant classification.</AbstractText>
+                </Abstract>
+                <AuthorList CompleteYN="Y">
+                    <Author ValidYN="Y">
+                        <LastName>Nykamp</LastName>
+                        <ForeName>Keith</ForeName>
+                        <Initials>K</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Anderson</LastName>
+                        <ForeName>Michael</ForeName>
+                        <Initials>M</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Powers</LastName>
+                        <ForeName>Martin</ForeName>
+                        <Initials>M</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Garcia</LastName>
+                        <ForeName>John</ForeName>
+                        <Initials>J</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Herrera</LastName>
+                        <ForeName>Blanca</ForeName>
+                        <Initials>B</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Ho</LastName>
+                        <ForeName>Yuan-Yuan</ForeName>
+                        <Initials>YY</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Kobayashi</LastName>
+                        <ForeName>Yuya</ForeName>
+                        <Initials>Y</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Patil</LastName>
+                        <ForeName>Nila</ForeName>
+                        <Initials>N</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Thusberg</LastName>
+                        <ForeName>Janita</ForeName>
+                        <Initials>J</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Westbrook</LastName>
+                        <ForeName>Marjorie</ForeName>
+                        <Initials>M</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <CollectiveName>Invitae Clinical Genomics Group</CollectiveName>
+                    </Author>
+                    <Author ValidYN="Y">
+                        <LastName>Topper</LastName>
+                        <ForeName>Scott</ForeName>
+                        <Initials>S</Initials>
+                        <AffiliationInfo>
+                            <Affiliation>Invitae Corporation, San Francisco, California, USA.</Affiliation>
+                        </AffiliationInfo>
+                    </Author>
+                </AuthorList>
+                <Language>eng</Language>
+                <PublicationTypeList>
+                    <PublicationType UI="D016428">Journal Article</PublicationType>
+                </PublicationTypeList>
+                <ArticleDate DateType="Electronic">
+                    <Year>2017</Year>
+                    <Month>05</Month>
+                    <Day>11</Day>
+                </ArticleDate>
+            </Article>
+            <MedlineJournalInfo>
+                <Country>United States</Country>
+                <MedlineTA>Genet Med</MedlineTA>
+                <NlmUniqueID>9815831</NlmUniqueID>
+                <ISSNLinking>1098-3600</ISSNLinking>
+            </MedlineJournalInfo>
+            <CitationSubset>IM</CitationSubset>
+            <CommentsCorrectionsList>
+                <CommentsCorrections RefType="CommentIn">
+                    <RefSource>Genet Med. 2017 Oct;19(10):1092-1095</RefSource>
+                    <PMID Version="1">28703787</PMID>
+                </CommentsCorrections>
+                <CommentsCorrections RefType="ErratumIn">
+                    <RefSource>Genet Med. 2020 Jan;22(1):240-242</RefSource>
+                    <PMID Version="1">31346256</PMID>
+                </CommentsCorrections>
+            </CommentsCorrectionsList>
+            <MeshHeadingList>
+                <MeshHeading>
+                    <DescriptorName UI="D005820" MajorTopicYN="N">Genetic Testing</DescriptorName>
+                    <QualifierName UI="Q000592" MajorTopicYN="Y">standards</QualifierName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D014644" MajorTopicYN="N">Genetic Variation</DescriptorName>
+                    <QualifierName UI="Q000235" MajorTopicYN="Y">genetics</QualifierName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D015894" MajorTopicYN="N">Genome, Human</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D023281" MajorTopicYN="N">Genomics</DescriptorName>
+                    <QualifierName UI="Q000379" MajorTopicYN="N">methods</QualifierName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D059014" MajorTopicYN="N">High-Throughput Nucleotide Sequencing</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D006801" MajorTopicYN="N">Humans</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D017422" MajorTopicYN="N">Sequence Analysis, DNA</DescriptorName>
+                    <QualifierName UI="Q000592" MajorTopicYN="N">standards</QualifierName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName UI="D012984" MajorTopicYN="N">Software</DescriptorName>
+                </MeshHeading>
+            </MeshHeadingList>
+            <InvestigatorList>
+                <Investigator ValidYN="Y">
+                    <LastName>Aguilar</LastName>
+                    <ForeName>Sienna</ForeName>
+                    <Initials>S</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Aradhya</LastName>
+                    <ForeName>Swaroop</ForeName>
+                    <Initials>S</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Beltran</LastName>
+                    <ForeName>Daniel</ForeName>
+                    <Initials>D</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Bunker</LastName>
+                    <ForeName>Brandon</ForeName>
+                    <Initials>B</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Daly</LastName>
+                    <ForeName>Amy</ForeName>
+                    <Initials>A</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Deucher</LastName>
+                    <ForeName>Anne</ForeName>
+                    <Initials>A</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Ekstein</LastName>
+                    <ForeName>Tali</ForeName>
+                    <Initials>T</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Entezam</LastName>
+                    <ForeName>Ali</ForeName>
+                    <Initials>A</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Erhard</LastName>
+                    <ForeName>Karl</ForeName>
+                    <Initials>K</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Esplin</LastName>
+                    <ForeName>Ed</ForeName>
+                    <Initials>E</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Fulbright</LastName>
+                    <ForeName>Jennifer</ForeName>
+                    <Initials>J</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Fuller</LastName>
+                    <ForeName>Amy</ForeName>
+                    <Initials>A</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Gibson</LastName>
+                    <ForeName>Kristen McDonald</ForeName>
+                    <Initials>KM</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Hambuch</LastName>
+                    <ForeName>Tina</ForeName>
+                    <Initials>T</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Harte</LastName>
+                    <ForeName>Rachel</ForeName>
+                    <Initials>R</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Hartshorne</LastName>
+                    <ForeName>Christy</ForeName>
+                    <Initials>C</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Haverfield</LastName>
+                    <ForeName>Eden</ForeName>
+                    <Initials>E</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Heidari</LastName>
+                    <ForeName>Nastaran</ForeName>
+                    <Initials>N</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Hogue</LastName>
+                    <ForeName>Michelle</ForeName>
+                    <Initials>M</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Iacoboni</LastName>
+                    <ForeName>Daniela</ForeName>
+                    <Initials>D</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Johnson</LastName>
+                    <ForeName>Britt</ForeName>
+                    <Initials>B</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Kang</LastName>
+                    <ForeName>Hio Chung</ForeName>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Lewis</LastName>
+                    <ForeName>Rachel</ForeName>
+                    <Initials>R</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Martin</LastName>
+                    <ForeName>Shiloh</ForeName>
+                    <Initials>S</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>McCalmon</LastName>
+                    <ForeName>Sarah</ForeName>
+                    <Initials>S</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Michalski</LastName>
+                    <ForeName>Scott</ForeName>
+                    <Initials>S</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Morgan</LastName>
+                    <ForeName>Cindy</ForeName>
+                    <Initials>C</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Murillo</LastName>
+                    <ForeName>Laura</ForeName>
+                    <Initials>L</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Nicolosi</LastName>
+                    <ForeName>Piper</ForeName>
+                    <Initials>P</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Ouyang</LastName>
+                    <ForeName>Karen</ForeName>
+                    <Initials>K</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Pardo</LastName>
+                    <ForeName>Carolina</ForeName>
+                    <Initials>C</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Quintana</LastName>
+                    <ForeName>Rita</ForeName>
+                    <Initials>R</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Rabideau</LastName>
+                    <ForeName>Marina</ForeName>
+                    <Initials>M</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Riethmaier</LastName>
+                    <ForeName>Darlene</ForeName>
+                    <Initials>D</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Stafford</LastName>
+                    <ForeName>Amanda</ForeName>
+                    <Initials>A</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Tahiliani</LastName>
+                    <ForeName>Jackie</ForeName>
+                    <Initials>J</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Tan</LastName>
+                    <ForeName>Chris</ForeName>
+                    <Initials>C</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Taylor</LastName>
+                    <ForeName>Paige</ForeName>
+                    <Initials>P</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Wang</LastName>
+                    <ForeName>Shu-Huei</ForeName>
+                    <Initials>SH</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>White</LastName>
+                    <ForeName>Hannah</ForeName>
+                    <Initials>H</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Wilson</LastName>
+                    <ForeName>Ian</ForeName>
+                    <Initials>I</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Winder</LastName>
+                    <ForeName>Tom</ForeName>
+                    <Initials>T</Initials>
+                </Investigator>
+                <Investigator ValidYN="Y">
+                    <LastName>Zeman</LastName>
+                    <ForeName>Michelle K</ForeName>
+                    <Initials>MK</Initials>
+                </Investigator>
+            </InvestigatorList>
+        </MedlineCitation>
+        <PubmedData>
+            <History>
+                <PubMedPubDate PubStatus="received">
+                    <Year>2016</Year>
+                    <Month>11</Month>
+                    <Day>10</Day>
+                </PubMedPubDate>
+                <PubMedPubDate PubStatus="accepted">
+                    <Year>2017</Year>
+                    <Month>02</Month>
+                    <Day>28</Day>
+                </PubMedPubDate>
+                <PubMedPubDate PubStatus="pubmed">
+                    <Year>2017</Year>
+                    <Month>5</Month>
+                    <Day>12</Day>
+                    <Hour>6</Hour>
+                    <Minute>0</Minute>
+                </PubMedPubDate>
+                <PubMedPubDate PubStatus="medline">
+                    <Year>2018</Year>
+                    <Month>6</Month>
+                    <Day>5</Day>
+                    <Hour>6</Hour>
+                    <Minute>0</Minute>
+                </PubMedPubDate>
+                <PubMedPubDate PubStatus="entrez">
+                    <Year>2017</Year>
+                    <Month>5</Month>
+                    <Day>12</Day>
+                    <Hour>6</Hour>
+                    <Minute>0</Minute>
+                </PubMedPubDate>
+            </History>
+            <PublicationStatus>ppublish</PublicationStatus>
+            <ArticleIdList>
+                <ArticleId IdType="pubmed">28492532</ArticleId>
+                <ArticleId IdType="pii">gim201737</ArticleId>
+                <ArticleId IdType="doi">10.1038/gim.2017.37</ArticleId>
+                <ArticleId IdType="pmc">PMC5632818</ArticleId>
+            </ArticleIdList>
+            <ReferenceList>
+                <Reference>
+                    <Citation>Appl Clin Genet. 2016 Jun 30;9:75-82</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">27418850</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Mayo Clin Proc. 2014 Jun;89(6):727-37</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">24793961</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Circ Cardiovasc Genet. 2013 Feb;6(1):118-31</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">23424256</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mol Genet. 2007 Feb 15;16(4):445-52</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">17210669</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>J Hum Genet. 2006;51(1):81-4</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">16308660</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genetics. 2016 Jun;203(2):635-47</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">27270698</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Eur Heart J. 2014 Nov 1;35(41):2849-50</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">25362500</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Nucleic Acids Res. 2014 Jan;42(Database issue):D980-5</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">24234437</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Oncogene. 1997 Dec 11;15(24):2999-3005</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">9416844</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Gastroenterology. 2002 Jan;122(1):211-9</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">11781295</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>N Engl J Med. 2015 Jun 4;372(23 ):2235-42</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">26014595</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Am J Kidney Dis. 2007 May;49(5):705-9</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">17472854</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mol Genet. 1998 May;7(5):871-7</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">9536092</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Genet. 2008 Aug;124(1):31-42</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">18575892</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>J Invest Dermatol. 2010 Feb;130(2):618-20</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">19759551</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Biochem Soc Trans. 2008 Jun;36(Pt 3):514-6</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">18481993</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mol Genet. 1995 Oct;4(10):1845-52</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">8595405</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Eur J Surg Oncol. 2007 May;33(4):448-51</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">17126523</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Eur J Surg Oncol. 2007 Nov;33(9):1061-7</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">17434710</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Front Cardiovasc Med. 2016 Jun 27;3:20</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">27446933</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Mol Cell Biol. 1996 Jul;16(7):3844-52</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">8668202</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mutat. 2015 May;36(5):513-23</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">25684150</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Exp Cell Res. 2009 May 1;315(8):1393-402</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">19268661</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Mol Genet Metab. 2003 Sep-Oct;80(1-2):207-15</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">14567970</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genes Chromosomes Cancer. 1997 Jan;18(1):8-18</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">8993976</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genet Med. 2013 Dec;15(12):972-7</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">23598715</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>PLoS One. 2015 Mar 24;10 (3):e0122662</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">25803691</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genet Med. 2015 May;17(5):405-24</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">25741868</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Nat Genet. 1998 Aug;19(4):384-9</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">9697702</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mol Genet. 1997 Nov;6(12 ):2061-7</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">9328469</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Eur J Hum Genet. 2013 Sep;21(9):918-28</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">23299917</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>J Invest Dermatol. 2006 Mar;126(3):660-6</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">16397522</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Korean J Pediatr. 2015 Oct;58(10):392-7</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">26576184</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genome Med. 2017 Feb 6;9(1):13</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">28166811</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Cancer Res. 2003 Jun 15;63(12 ):3302-8</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">12810663</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Am J Hum Genet. 2016 Jun 2;98 (6):1067-1076</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">27181684</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Clin Genet. 2013 Nov;84(5):453-63</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">24033266</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Genomic Med. 2007;1(3-4):95-104</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">18923934</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Clin Cancer Res. 2013 May 1;19(9):2432-41</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">23403630</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>N Engl J Med. 1998 Mar 26;338(13):879-87</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">9516223</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Hum Mutat. 2008 Dec;29(12 ):1412-24</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">18561205</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>Eur J Hum Genet. 1999 Oct-Nov;7(7):778-82</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">10573010</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+                <Reference>
+                    <Citation>J Med Genet. 2004 May;41(5):e66</Citation>
+                    <ArticleIdList>
+                        <ArticleId IdType="pubmed">15121794</ArticleId>
+                    </ArticleIdList>
+                </Reference>
+            </ReferenceList>
+        </PubmedData>
+    </PubmedArticle>
+</PubmedArticleSet>

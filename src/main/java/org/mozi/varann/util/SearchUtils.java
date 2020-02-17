@@ -13,7 +13,15 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.mozi.varann.data.records.*;
 import org.mozi.varann.web.models.*;
 
-import java.util.ArrayList;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * @author <a href="mailto:hsamireh@gmail.com">Abdulrahman Semrie</a>
@@ -35,14 +43,14 @@ public class SearchUtils {
         return searchRequest;
     }
 
-    public static SearchRequest getSearchRequest(String[] indices, String[] fields, String[] value)  {
-        if(fields.length != value.length) {
+    public static SearchRequest getSearchRequest(String[] indices, String[] fields, String[] value) {
+        if (fields.length != value.length) {
             throw new IllegalArgumentException("fields and values size must be equal");
         }
         SearchRequest searchRequest = new SearchRequest(indices);
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         var boolQuery = QueryBuilders.boolQuery();
-        for(int i = 0; i < fields.length; i++){
+        for (int i = 0; i < fields.length; i++) {
             boolQuery.must(QueryBuilders.matchQuery(fields[i], value[i]));
         }
 
@@ -52,14 +60,14 @@ public class SearchUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static VariantInfo buildVariantInfo(Datastore datastore ,SearchHits hits, String hgvs) {
+    public static VariantInfo buildVariantInfo(Datastore datastore, SearchHits hits, String hgvs) throws IOException {
         VariantInfo varInfo = new VariantInfo();
         for (var hit : hits) {
             String index = hit.getIndex();
             String id = hit.getId();
 
             int hgvsIndex = 0;
-            if( hit.getSourceAsMap().get("hgvs") instanceof ArrayList){
+            if (hit.getSourceAsMap().get("hgvs") instanceof ArrayList) {
                 hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
                 String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
                 if (varInfo.getAlt() == null) {
@@ -78,19 +86,19 @@ public class SearchUtils {
                     ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
                     DiseaseInfo diseaseInfonfo = new DiseaseInfo();
                     diseaseInfonfo.setAnnotation(clinvarRec.getAnnotations().get(hgvsIndex));
-                    diseaseInfonfo.setPumeds(clinvarRec.getPubmeds());
+                    diseaseInfonfo.setPumeds(addPubmedInfo(clinvarRec.getPubmeds()));
                     varInfo.setClinvar(diseaseInfonfo);
                     break;
                 case "exac":
                     var exacQuery = datastore.createQuery(ExacRecord.class);
                     ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    for(ExacPopulation pop : ExacPopulation.values()){
+                    for (ExacPopulation pop : ExacPopulation.values()) {
                         PopulationData data = new PopulationData();
-                        data.setAC(exacRec.getAlleleCounts().containsKey(pop) ? exacRec.getAlleleCounts().get(pop).get(hgvsIndex): -1);
+                        data.setAC(exacRec.getAlleleCounts().containsKey(pop) ? exacRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
                         data.setAF(exacRec.getAlleleFrequencies().containsKey(pop) ? exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
                         data.setAN(exacRec.getChromCounts().getOrDefault(pop, -1));
                         data.setHomAlt(exacRec.getAlleleHomCounts().containsKey(pop) ? exacRec.getAlleleHomCounts().get(pop).get(hgvsIndex) : -1);
-                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                        if (varInfo.getPopulation().get(pop.name()) == null) {
                             PopulationInfo info = new PopulationInfo();
                             varInfo.getPopulation().put(pop.name(), info);
                         }
@@ -109,7 +117,7 @@ public class SearchUtils {
                     varInfo.setId(record.getRsId());
 
                     GnomadGenomeRecord gnomadGenomeRecord = record.getGnomeRecord();
-                    if(gnomadGenomeRecord != null) {
+                    if (gnomadGenomeRecord != null) {
                         for (GnomadExomePopulation pop : GnomadExomePopulation.values()) {
                             PopulationData data = new PopulationData();
                             data.setAF(gnomadGenomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadGenomeRecord.getAlleleFrequencies().get(pop) : -1);
@@ -128,12 +136,12 @@ public class SearchUtils {
                 case "g1k":
                     var g1kQuery = datastore.createQuery(ThousandGenomesRecord.class);
                     ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    for(ThousandGenomesPopulation pop: ThousandGenomesPopulation.values()){
+                    for (ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()) {
                         PopulationData data = new PopulationData();
-                        data.setAC(g1kRec.getAlleleCounts().containsKey(pop)  ? g1kRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
-                        data.setAF(g1kRec.getAlleleFrequencies().containsKey(pop) ?  g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex): -1);
+                        data.setAC(g1kRec.getAlleleCounts().containsKey(pop) ? g1kRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
+                        data.setAF(g1kRec.getAlleleFrequencies().containsKey(pop) ? g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
                         data.setAN(g1kRec.getChromCounts().getOrDefault(pop, -1));
-                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                        if (varInfo.getPopulation().get(pop.name()) == null) {
                             PopulationInfo info = new PopulationInfo();
                             varInfo.getPopulation().put(pop.name(), info);
                         }
@@ -143,13 +151,13 @@ public class SearchUtils {
                 case "gnomad_exome":
                     var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
                     GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
-                    for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                    for (GnomadExomePopulation pop : GnomadExomePopulation.values()) {
                         PopulationData data = new PopulationData();
                         data.setAC(gnomadExomeRecord.getAlleleCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
-                        data.setAF(gnomadExomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex): -1);
+                        data.setAF(gnomadExomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
                         data.setAN(gnomadExomeRecord.getChromCounts().getOrDefault(pop, -1));
                         data.setHomAlt(gnomadExomeRecord.getAlleleHomCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleHomCounts().get(pop).get(hgvsIndex) : -1);
-                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                        if (varInfo.getPopulation().get(pop.name()) == null) {
                             PopulationInfo info = new PopulationInfo();
                             varInfo.getPopulation().put(pop.name(), info);
                         }
@@ -172,12 +180,12 @@ public class SearchUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static VariantInfo buildVariantInfo(Datastore datastore, SearchHit hit, String hgvs) {
+    public static VariantInfo buildVariantInfo(Datastore datastore, SearchHit hit, String hgvs) throws IOException {
         VariantInfo varInfo = new VariantInfo();
         String index = hit.getIndex();
         String id = hit.getId();
         int hgvsIndex = 0;
-        if( hit.getSourceAsMap().get("hgvs") instanceof ArrayList){
+        if (hit.getSourceAsMap().get("hgvs") instanceof ArrayList) {
             hgvsIndex = ((ArrayList<String>) hit.getSourceAsMap().get("hgvs")).indexOf(hgvs);
             String alt = ((ArrayList<String>) hit.getSourceAsMap().get("alt")).get(hgvsIndex);
             if (varInfo.getAlt() == null) {
@@ -194,19 +202,19 @@ public class SearchUtils {
                 ClinVarRecord clinvarRec = clinvarQuery.field("_id").equal(new ObjectId(id)).find().next();
                 DiseaseInfo diseaseInfonfo = new DiseaseInfo();
                 diseaseInfonfo.setAnnotation(clinvarRec.getAnnotations().get(hgvsIndex));
-                diseaseInfonfo.setPumeds(clinvarRec.getPubmeds());
+                diseaseInfonfo.setPumeds(addPubmedInfo(clinvarRec.getPubmeds()));
                 varInfo.setClinvar(diseaseInfonfo);
                 break;
             case "exac":
                 var exacQuery = datastore.createQuery(ExacRecord.class);
                 ExacRecord exacRec = exacQuery.field("_id").equal(new ObjectId(id)).find().next();
-                for(ExacPopulation pop : ExacPopulation.values()){
+                for (ExacPopulation pop : ExacPopulation.values()) {
                     PopulationData data = new PopulationData();
                     data.setAC(exacRec.getAlleleCounts().containsKey(pop) ? exacRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
                     data.setAF(exacRec.getAlleleFrequencies().containsKey(pop) ? exacRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
                     data.setAN(exacRec.getChromCounts().getOrDefault(pop, -1));
                     data.setHomAlt(exacRec.getAlleleHomCounts().get(pop).get(hgvsIndex));
-                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                    if (varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();
                         varInfo.getPopulation().put(pop.name(), info);
                     }
@@ -226,11 +234,11 @@ public class SearchUtils {
                 varInfo.setId(record.getRsId());
 
                 GnomadGenomeRecord gnomadGenomeRecord = record.getGnomeRecord();
-                if(gnomadGenomeRecord != null){
-                    for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                if (gnomadGenomeRecord != null) {
+                    for (GnomadExomePopulation pop : GnomadExomePopulation.values()) {
                         PopulationData data = new PopulationData();
-                        data.setAF(gnomadGenomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadGenomeRecord.getAlleleFrequencies().get(pop):-1);
-                        if(varInfo.getPopulation().get(pop.name()) == null) {
+                        data.setAF(gnomadGenomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadGenomeRecord.getAlleleFrequencies().get(pop) : -1);
+                        if (varInfo.getPopulation().get(pop.name()) == null) {
                             PopulationInfo info = new PopulationInfo();
                             varInfo.getPopulation().put(pop.name(), info);
                         }
@@ -245,12 +253,12 @@ public class SearchUtils {
             case "g1k":
                 var g1kQuery = datastore.createQuery(ThousandGenomesRecord.class);
                 ThousandGenomesRecord g1kRec = g1kQuery.field("_id").equal(new ObjectId(id)).find().next();
-                for(ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()){
+                for (ThousandGenomesPopulation pop : ThousandGenomesPopulation.values()) {
                     PopulationData data = new PopulationData();
                     data.setAC(g1kRec.getAlleleCounts().containsKey(pop) ? g1kRec.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
                     data.setAF(g1kRec.getAlleleFrequencies().containsKey(pop) ? g1kRec.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
-                    data.setAN( g1kRec.getChromCounts().getOrDefault(pop, -1));
-                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                    data.setAN(g1kRec.getChromCounts().getOrDefault(pop, -1));
+                    if (varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();
                         varInfo.getPopulation().put(pop.name(), info);
                     }
@@ -260,13 +268,13 @@ public class SearchUtils {
             case "gnomad_exome":
                 var gnomadQuery = datastore.createQuery(GnomadExomeRecord.class);
                 GnomadExomeRecord gnomadExomeRecord = gnomadQuery.field("_id").equal(new ObjectId(id)).find().next();
-                for(GnomadExomePopulation pop : GnomadExomePopulation.values()){
+                for (GnomadExomePopulation pop : GnomadExomePopulation.values()) {
                     PopulationData data = new PopulationData();
                     data.setAC(gnomadExomeRecord.getAlleleCounts().containsKey(pop) ? gnomadExomeRecord.getAlleleCounts().get(pop).get(hgvsIndex) : -1);
                     data.setAF(gnomadExomeRecord.getAlleleFrequencies().containsKey(pop) ? gnomadExomeRecord.getAlleleFrequencies().get(pop).get(hgvsIndex) : -1);
                     data.setAN(gnomadExomeRecord.getChromCounts().getOrDefault(pop, -1));
                     data.setHomAlt(gnomadExomeRecord.getAlleleHomCounts().get(pop).get(hgvsIndex));
-                    if(varInfo.getPopulation().get(pop.name()) == null) {
+                    if (varInfo.getPopulation().get(pop.name()) == null) {
                         PopulationInfo info = new PopulationInfo();
                         varInfo.getPopulation().put(pop.name(), info);
                     }
@@ -296,18 +304,63 @@ public class SearchUtils {
     }
 
     public static ScoreInfo getScoreInfo(DBNSFPRecord record) {
-        if(record != null){
+        if (record != null) {
             ScoreInfo scoreInfo = new ScoreInfo();
             scoreInfo.setCadd(new PredictedScore(record.getCadd(), null));
             scoreInfo.setMutationTaster(new PredictedScore(record.getMutationTaster(), record.getMutationTasterPred()));
             scoreInfo.setPolyphen2(new PredictedScore(record.getPolyphen2(), null));
             scoreInfo.setLrt(new PredictedScore(record.getLrt(), record.getLrtPred()));
-            scoreInfo.setSift(new PredictedScore(record.getSift(), record.getSiftPred() ));
+            scoreInfo.setSift(new PredictedScore(record.getSift(), record.getSiftPred()));
 
             return scoreInfo;
         }
 
         return null;
 
+    }
+
+    public static List<Map<String, String>> addPubmedInfo(Collection<String> ids) throws IOException {
+        String baseString = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=%s&retmode=xml";
+        List<Map<String, String>> result = new ArrayList<>();
+        InputStream in;
+        for(String pubmed : ids){
+            String urlStr = String.format(baseString, pubmed);
+            URL url = new URL(urlStr);
+            in = url.openConnection().getInputStream();
+            result.add(getPubmedInfo(in));
+        }
+        return result;
+    }
+
+    public static Map<String, String> getPubmedInfo(InputStream in) {
+        Map<String, String> info = new HashMap<>();
+        try {
+            XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+            XMLStreamReader streamReader = inputFactory.createXMLStreamReader(in);
+            String year, month, date;
+            while (streamReader.hasNext()){
+                if(streamReader.next() == XMLStreamConstants.START_ELEMENT){
+                    if(streamReader.getLocalName().equals("ArticleTitle")){ //Get the pubmed article title
+                        info.put("title", streamReader.getElementText());
+                    }
+                    if(streamReader.getLocalName().equals("AbstractText")) {
+                        info.put("abstract", streamReader.getElementText());
+                    }
+                    if(streamReader.getLocalName().equals("ArticleDate")){
+                        streamReader.nextTag();
+                        year = streamReader.getElementText();
+                        streamReader.nextTag();
+                        month = streamReader.getElementText();
+                        streamReader.nextTag();
+                        date = streamReader.getElementText();
+                        info.put("publishedDate", String.format("%s-%s-%s", date, month, year));
+                        break;
+                    }
+                }
+            }
+        } catch (XMLStreamException ex) {
+            throw new AnnotationException(ex.getMessage());
+        }
+        return info;
     }
 }
