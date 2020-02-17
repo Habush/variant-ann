@@ -113,7 +113,7 @@ public class VariantAnnotationExecutor {
 
     @SuppressWarnings("unchecked")
     public List<VariantInfo> annotateByRange(String chr, long start, long end, int limit) throws IOException {
-        SearchRequest request = getRangeRequest(new String[]{"clinvar", "variant", "exac", "g1k", "intervar", "gnomad_exome"}, chr, start, end);
+        SearchRequest request = getRangeRequest(new String[]{ "variant", "intervar"}, chr, start, end);
         request.source().size(limit);
         var searchResponse = client.search(request, RequestOptions.DEFAULT);
         if (searchResponse.getHits().getTotalHits().value == 0) {
